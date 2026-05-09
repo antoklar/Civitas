@@ -35,25 +35,13 @@ module.exports = async (req, res) => {
     const candidates = data.response?.results?.candidates || [];
     const allOfficials = candidates.flatMap(c => c.officials || []);
 
-    if (req.query.debug) {
-      return res.status(200).json({
-        keySet: !!process.env.CICERO_API_KEY,
-        keyPrefix: process.env.CICERO_API_KEY?.slice(0, 6),
-        candidatesCount: candidates.length,
-        allOfficialsCount: allOfficials.length,
-        rawErrors: data.response?.errors,
-        firstOfficialName: allOfficials[0] ? `${allOfficials[0].first_name} ${allOfficials[0].last_name}` : 'none',
-      });
-    }
-
     if (allOfficials.length === 0) {
       return res.status(400).json({ error: 'No representatives found for this address.' });
     }
 
-    const firstDistrict = allOfficials[0]?.office?.district || {};
     const normalizedInput = {
-      city: firstDistrict.city || '',
-      state: firstDistrict.state || '',
+      city: candidates[0]?.match_city || '',
+      state: candidates[0]?.match_region || '',
     };
 
     const officials = [];
