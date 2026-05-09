@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Representative — Civitas</title>
+  <meta name="description" content="Full representative profile on Civitas." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0f1923; --paper: #f4f1eb; --cream: #faf8f3;
+      --accent: #b5371f; --accent-light: #f5ece9; --gold: #c9973a;
+      --muted: #6e6860; --border: #ddd8ce; --card: #ffffff;
+      --dem: #1a3f8f; --dem-bg: #edf2ff;
+      --rep: #8f1a1a; --rep-bg: #fff0f0;
+      --ind: #1a6b3a; --ind-bg: #edfff4;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .app { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+
+    /* Top bar */
+    .topbar { padding: 24px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 44px; display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; transition: color 0.15s; }
+    .back-btn:hover { color: var(--ink); }
+    .topbar-brand { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--muted); }
+
+    /* Hero */
+    .profile-hero { display: grid; grid-template-columns: 96px 1fr; gap: 28px; align-items: start; padding-bottom: 44px; border-bottom: 1.5px solid var(--ink); margin-bottom: 52px; }
+    .hero-avatar { width: 88px; height: 88px; border-radius: 50%; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.8rem; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-name { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.05; margin-bottom: 6px; }
+    .hero-office { font-size: 1rem; color: var(--muted); margin-bottom: 14px; font-weight: 300; }
+    .hero-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .rep-party-badge { display: inline-block; font-size: 0.67rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; padding: 3px 10px; border-radius: 2px; }
+    .party-dem .rep-party-badge, .hero-badges .party-dem { background: var(--dem-bg); color: var(--dem); }
+    .party-rep .rep-party-badge, .hero-badges .party-rep { background: var(--rep-bg); color: var(--rep); }
+    .party-ind .rep-party-badge, .hero-badges .party-ind { background: var(--ind-bg); color: var(--ind); }
+    .party-other .rep-party-badge, .hero-badges .party-other { background: #f5f0e8; color: var(--gold); }
+    .level-tag { font-size: 0.63rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); padding: 3px 9px; border-radius: 2px; font-weight: 600; }
+    .hero-term { font-size: 0.8rem; color: var(--muted); margin-bottom: 18px; }
+    .hero-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .hero-link { font-size: 0.78rem; color: var(--accent); text-decoration: none; font-weight: 500; border: 1px solid currentColor; padding: 5px 12px; border-radius: 2px; transition: background 0.15s, color 0.15s; opacity: 0.85; }
+    .hero-link:hover { background: var(--accent); color: white; opacity: 1; }
+
+    /* Section headers */
+    .section { margin-bottom: 52px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .section-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .section-line { flex: 1; height: 1px; background: var(--border); }
+
+    /* Bio */
+    .bio-text p { font-size: 0.95rem; line-height: 1.75; color: var(--ink); margin-bottom: 14px; font-weight: 300; }
+
+    /* Committees */
+    .committee-item { font-size: 0.875rem; padding: 11px 16px; border: 1px solid var(--border); border-radius: 3px; margin-bottom: 6px; background: var(--card); display: flex; justify-content: space-between; align-items: center; }
+    .committee-role { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+
+    /* Voting record */
+    .vote-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .vote-row:last-child { border-bottom: none; }
+    .vote-info { flex: 1; min-width: 0; }
+    .vote-bill { font-size: 0.9rem; font-weight: 500; color: var(--ink); margin-bottom: 4px; line-height: 1.4; }
+    .vote-meta { font-size: 0.75rem; color: var(--muted); }
+    .vote-badge { font-size: 0.63rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; padding: 4px 10px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+    .vote-yes  { background: #edf7f0; color: #1a6b3a; }
+    .vote-no   { background: var(--rep-bg); color: var(--rep); }
+    .vote-other { background: #f0f0f0; color: var(--muted); }
+
+    /* Donors */
+    .donor-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .donor-row:last-child { border-bottom: none; }
+    .donor-name { font-size: 0.9rem; font-weight: 500; }
+    .donor-amount { font-size: 0.875rem; font-family: 'DM Serif Display', serif; color: var(--accent); }
+    .donor-bar-wrap { width: 120px; height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; }
+    .donor-bar { height: 100%; background: var(--accent); border-radius: 2px; }
+
+    /* Contact */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .contact-block { padding: 18px 20px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); }
+    .contact-label { font-size: 0.63rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+    .contact-address { font-size: 0.875rem; line-height: 1.65; color: var(--ink); margin-bottom: 8px; font-weight: 300; }
+    .contact-phone { display: block; font-size: 0.875rem; color: var(--accent); text-decoration: none; font-weight: 500; margin-top: 4px; }
+    .contact-phone:hover { color: var(--ink); }
+    .contact-fax { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+    .contact-email a { font-size: 0.875rem; color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    /* States */
+    .muted-text { font-size: 0.875rem; color: var(--muted); font-style: italic; }
+    .loading-inline { font-size: 0.875rem; color: var(--muted); font-style: italic; display: flex; align-items: center; gap: 10px; }
+    .mini-spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0; }
+    .coming-soon-box { text-align: center; padding: 36px 20px; color: var(--muted); border: 1px dashed var(--border); border-radius: 4px; }
+    .coming-soon-box p { font-size: 0.875rem; line-height: 1.65; }
+    .info-note { font-size: 0.82rem; color: var(--muted); background: var(--cream); border: 1px solid var(--border); border-radius: 3px; padding: 10px 14px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .profile-hero { grid-template-columns: 68px 1fr; gap: 16px; }
+      .hero-avatar { width: 64px; height: 64px; font-size: 1.4rem; }
+      .hero-name { font-size: 1.6rem; }
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <div class="topbar">
+      <a href="/" class="back-btn">&#8592; Back to Search</a>
+      <span class="topbar-brand">Civitas</span>
+    </div>
+
+    <div class="profile-hero" id="hero">
+      <div class="hero-avatar" id="heroAvatar"></div>
+      <div class="hero-info">
+        <div class="hero-name" id="heroName">Loading…</div>
+        <div class="hero-office" id="heroOffice"></div>
+        <div class="hero-badges" id="heroBadges"></div>
+        <div class="hero-term" id="heroTerm"></div>
+        <div class="hero-links" id="heroLinks"></div>
+      </div>
+    </div>
+
+    <div id="profileContent">
+
+      <div class="section" id="bioSection">
+        <div class="section-header">
+          <span class="section-label">About</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="bioText"></div>
+      </div>
+
+      <div class="section" id="committeesSection">
+        <div class="section-header">
+          <span class="section-label">Committees</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="committeesList"></div>
+      </div>
+
+      <div class="section" id="votesSection">
+        <div class="section-header">
+          <span class="section-label">Recent Votes</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="votesContent"></div>
+      </div>
+
+      <div class="section" id="donorsSection">
+        <div class="section-header">
+          <span class="section-label">Top Campaign Donors</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="donorsContent"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="section-label">Contact</span>
+          <span class="section-line"></span>
+        </div>
+        <div class="contact-grid" id="contactContent"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let official = null;
+    let office   = null;
+
+    function getPartyClass(party = '') {
+      if (/democrat/i.test(party))            return 'party-dem';
+      if (/republican/i.test(party))          return 'party-rep';
+      if (/independent|nonpartisan/i.test(party)) return 'party-ind';
+      return 'party-other';
+    }
+
+    function getInitials(name = '') {
+      return name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    }
+
+    function formatYear(dateStr) {
+      if (!dateStr) return '';
+      return new Date(dateStr).getFullYear().toString();
+    }
+
+    function fmtMoney(str) {
+      const n = parseInt(str, 10);
+      if (isNaN(n)) return str;
+      return '$' + n.toLocaleString();
+    }
+
+    function isCongressMember() {
+      return office?.levels?.[0] === 'country' &&
+        /senator|representative|congressm/i.test(office?.name || '');
+    }
+
+    function getChamber() {
+      if (/senator/i.test(office?.name))             return 'senate';
+      if (/representative|congressm/i.test(office?.name)) return 'house';
+      return '';
+    }
+
+    // ── Hero ──────────────────────────────────────────────────────────────────
+    function renderHero() {
+      document.title = `${official.name} — Civitas`;
+
+      const avatarEl = document.getElementById('heroAvatar');
+      if (official.photoUrl) {
+        const img = document.createElement('img');
+        img.src = official.photoUrl;
+        img.alt = official.name;
+        img.onerror = () => { img.remove(); avatarEl.textContent = getInitials(official.name); };
+        avatarEl.appendChild(img);
+      } else {
+        avatarEl.textContent = getInitials(official.name);
+      }
+
+      document.getElementById('heroName').textContent   = official.name;
+      document.getElementById('heroOffice').textContent = office?.name || '';
+
+      const badgesEl = document.getElementById('heroBadges');
+      const partyClass = getPartyClass(official.party);
+      const levelMap = { country: 'Federal', administrativeArea1: 'State', administrativeArea2: 'County', locality: 'Local' };
+      const levelLabel = levelMap[office?.levels?.[0]] || 'Local';
+      badgesEl.innerHTML = `
+        <span class="rep-party-badge ${partyClass}">${official.party || 'Unknown Party'}</span>
+        <span class="level-tag">${levelLabel}</span>
+      `;
+
+      if (official.termStart) {
+        const start = formatYear(official.termStart);
+        const end   = official.termEnd ? formatYear(official.termEnd) : 'Present';
+        document.getElementById('heroTerm').textContent = `Term: ${start} – ${end}`;
+      }
+
+      const links = [];
+      if (official.phones?.[0]) links.push(`<a href="tel:${official.phones[0]}" class="hero-link">&#128222; ${official.phones[0]}</a>`);
+      if (official.urls?.[0])   links.push(`<a href="${official.urls[0]}" target="_blank" rel="noopener" class="hero-link">&#128279; Website</a>`);
+
+      (official.identifiers || []).forEach(id => {
+        const val = id.identifier;
+        if (!val) return;
+        if (id.identifier_type === 'TWITTER')   links.push(`<a href="https://twitter.com/${val}" target="_blank" rel="noopener" class="hero-link">&#120143; @${val}</a>`);
+        if (id.identifier_type === 'FACEBOOK')  links.push(`<a href="https://facebook.com/${val}" target="_blank" rel="noopener" class="hero-link">Facebook</a>`);
+        if (id.identifier_type === 'YOUTUBE')   links.push(`<a href="https://youtube.com/${val}" target="_blank" rel="noopener" class="hero-link">YouTube</a>`);
+        if (id.identifier_type === 'INSTAGRAM') links.push(`<a href="https://instagram.com/${val}" target="_blank" rel="noopener" class="hero-link">Instagram</a>`);
+      });
+
+      document.getElementById('heroLinks').innerHTML = links.join('');
+    }
+
+    // ── Bio ───────────────────────────────────────────────────────────────────
+    function renderBio() {
+      const notes = official.notes || [];
+      const texts = notes.map(n => {
+        if (typeof n === 'string') return n;
+        return n.note || n.text || n.body || '';
+      }).filter(Boolean);
+
+      const el = document.getElementById('bioText');
+      el.innerHTML = texts.length
+        ? texts.map(t => `<p>${t}</p>`).join('')
+        : '<p class="muted-text">No biographical information available.</p>';
+    }
+
+    // ── Committees ────────────────────────────────────────────────────────────
+    function renderCommittees() {
+      const committees = official.committees || [];
+      const el = document.getElementById('committeesList');
+
+      if (!committees.length) {
+        el.innerHTML = '<p class="muted-text">No committee information available.</p>';
+        return;
+      }
+
+      el.innerHTML = committees.map(c => {
+        const name = typeof c === 'string' ? c : (c.name || '');
+        const role = typeof c === 'object' ? (c.position || c.side || '') : '';
+        if (!name) return '';
+        return `<div class="committee-item">
+          <span>${name}</span>
+          ${role ? `<span class="committee-role">${role}</span>` : ''}
+        </div>`;
+      }).filter(Boolean).join('');
+    }
+
+    // ── Voting record ─────────────────────────────────────────────────────────
+    async function renderVotes() {
+      const el = document.getElementById('votesContent');
+
+      if (!isCongressMember()) {
+        if (office?.levels?.[0] === 'country') {
+          el.innerHTML = '<p class="muted-text">Voting records are available for U.S. Senators and Representatives.</p>';
+        } else {
+          document.getElementById('votesSection').style.display = 'none';
+        }
+        return;
+      }
+
+      el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Loading voting record…</div>';
+
+      try {
+        const chamber = getChamber();
+        const memberRes = await fetch(`/api/member?name=${encodeURIComponent(official.name)}${chamber ? '&chamber=' + chamber : ''}`);
+        const memberData = await memberRes.json();
+
+        if (memberData.error) {
+          el.innerHTML = '<p class="muted-text">Could not find this member in ProPublica. Add a PROPUBLICA_API_KEY to Vercel to enable voting records.</p>';
+          if (memberRes.status === 503) el.innerHTML = '<div class="info-note">Add a free <strong>PROPUBLICA_API_KEY</strong> to your Vercel environment variables to enable voting records.</div>';
+          return;
+        }
+
+        const votesRes  = await fetch(`/api/votes?member_id=${memberData.member_id}`);
+        const votesData = await votesRes.json();
+
+        if (votesData.error || !votesData.votes?.length) {
+          el.innerHTML = '<p class="muted-text">No voting record available.</p>';
+          return;
+        }
+
+        el.innerHTML = votesData.votes.map(v => {
+          const pos = (v.position || '').toLowerCase();
+          const badgeClass = (pos === 'yes' || pos === 'yea') ? 'vote-yes'
+                           : (pos === 'no'  || pos === 'nay') ? 'vote-no'
+                           : 'vote-other';
+          const title = v.bill?.title || v.description || 'Procedural Vote';
+          const truncated = title.length > 90 ? title.slice(0, 90) + '…' : title;
+          return `<div class="vote-row">
+            <div class="vote-info">
+              <div class="vote-bill">${truncated}</div>
+              <div class="vote-meta">${v.date}${v.chamber ? ' · ' + v.chamber : ''}${v.question ? ' · ' + v.question : ''}</div>
+            </div>
+            <span class="vote-badge ${badgeClass}">${v.position || 'N/A'}</span>
+          </div>`;
+        }).join('');
+
+      } catch {
+        el.innerHTML = '<p class="muted-text">Could not load voting record.</p>';
+      }
+    }
+
+    // ── Donors ────────────────────────────────────────────────────────────────
+    function renderDonors() {
+      document.getElementById('donorsContent').innerHTML = `
+        <div class="coming-soon-box">
+          <p>Donor data coming soon &mdash; will connect to OpenSecrets campaign finance records.</p>
+        </div>`;
+    }
+
+    // ── Contact ───────────────────────────────────────────────────────────────
+    function renderContact() {
+      const addresses = official.addresses    || [];
+      const emails    = official.emailAddresses || [];
+      const el = document.getElementById('contactContent');
+      let html = '';
+
+      addresses.forEach(addr => {
+        const lines = [addr.address_1, addr.address_2].filter(Boolean);
+        const cityLine = [addr.city, addr.state, addr.postal_code].filter(Boolean).join(', ');
+        if (cityLine) lines.push(cityLine);
+        if (!lines.length) return;
+
+        html += `<div class="contact-block">
+          <div class="contact-label">Office</div>
+          <div class="contact-address">${lines.join('<br>')}</div>
+          ${addr.phone_1 ? `<a href="tel:${addr.phone_1}" class="contact-phone">&#128222; ${addr.phone_1}</a>` : ''}
+          ${addr.fax_1   ? `<div class="contact-fax">Fax: ${addr.fax_1}</div>` : ''}
+        </div>`;
+      });
+
+      emails.forEach(email => {
+        if (!email) return;
+        html += `<div class="contact-block">
+          <div class="contact-label">Email</div>
+          <div class="contact-email"><a href="mailto:${email}">${email}</a></div>
+        </div>`;
+      });
+
+      el.innerHTML = html || '<p class="muted-text">No contact information available.</p>';
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    function init() {
+      const stored = sessionStorage.getItem('civitas_selected_official');
+      if (!stored) { window.location.href = '/'; return; }
+
+      try {
+        const data = JSON.parse(stored);
+        official = data.official;
+        office   = data.office;
+      } catch {
+        window.location.href = '/';
+        return;
+      }
+
+      renderHero();
+      renderBio();
+      renderCommittees();
+      renderDonors();
+      renderContact();
+      renderVotes();
+    }
+
+    init();
+  </script>
+</body>
+</html>

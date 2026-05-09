@@ -60,6 +60,13 @@ module.exports = async (req, res) => {
         phones: phone ? [phone] : [],
         urls: siteUrl ? [siteUrl] : [],
         photoUrl: photoUrl || undefined,
+        addresses: candidate.addresses || [],
+        emailAddresses: candidate.email_addresses || [],
+        notes: candidate.notes || [],
+        committees: candidate.committees || [],
+        identifiers: candidate.identifiers || [],
+        termStart: candidate.current_term_start_date || '',
+        termEnd: candidate.term_end_date || '',
       });
 
       const districtType = candidate.office?.district?.district_type || '';

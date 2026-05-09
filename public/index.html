@@ -71,6 +71,7 @@
     .rep-card.party-dem::before { background: var(--dem); }
     .rep-card.party-rep::before { background: var(--rep); }
     .rep-card.party-ind::before { background: var(--ind); }
+    .rep-card { cursor: pointer; }
     .rep-card:hover { box-shadow: 3px 3px 0 rgba(15,25,35,0.1); transform: translate(-1px, -1px); }
     .rep-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.1rem; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); }
     .rep-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -184,6 +185,7 @@
     const repsContainer = document.getElementById('repsContainer');
     const locationName = document.getElementById('locationName');
 
+    let allRepsData = [];
     let debounceTimer = null;
     let suggestions = [];
     let activeIdx = -1;
@@ -269,10 +271,11 @@
           if (!grouped[level]) grouped[level] = [];
           (office.officialIndices||[]).forEach(idx => {
             const official = data.officials?.[idx];
-            if (official) grouped[level].push({ official, office: office.name });
+            if (official) grouped[level].push({ official, office: { name: office.name, levels: office.levels } });
           });
         });
         if (Object.keys(grouped).length === 0) throw new Error('No representatives found.');
+        allRepsData = [];
         repsContainer.innerHTML = LEVEL_ORDER.map(level => {
           const officials = grouped[level];
           if (!officials?.length) return '';
@@ -284,11 +287,13 @@
                 <span class="level-count">${officials.length} rep${officials.length!==1?'s':''}</span>
               </div>
               ${officials.map(({official, office}) => {
+                const repIdx = allRepsData.length;
+                allRepsData.push({ official, office });
                 const partyClass = getPartyClass(official.party);
                 const phone = official.phones?.[0] || '';
                 const url = official.urls?.[0] || '';
                 return `
-                  <div class="rep-card ${partyClass}">
+                  <div class="rep-card ${partyClass}" data-rep-idx="${repIdx}">
                     <div class="rep-avatar">
                       ${official.photoUrl
                         ? `<img src="${official.photoUrl}" alt="${official.name}" onerror="this.style.display='none'">`
@@ -296,7 +301,7 @@
                     </div>
                     <div>
                       <div class="rep-name">${official.name}</div>
-                      <div class="rep-office">${office}</div>
+                      <div class="rep-office">${office.name}</div>
                       <span class="rep-party-badge">${official.party||'Unknown Party'}</span>
                       <div class="rep-links">
                         ${phone?`<a href="tel:${phone}" class="rep-link">📞 ${phone}</a>`:''}
@@ -304,9 +309,7 @@
                       </div>
                     </div>
                     <div class="rep-side">
-                      <span class="soon-tag">Voting Record</span>
-                      <span class="soon-tag">Donors</span>
-                      <span class="soon-tag">Deep Dive</span>
+                      <span class="soon-tag">View Profile</span>
                     </div>
                   </div>
                 `;
@@ -352,6 +355,17 @@
     document.addEventListener('click', e => {
       if (!document.getElementById('searchWrapper').contains(e.target)) {
         dropdown.classList.remove('visible');
+      }
+    });
+
+    repsContainer.addEventListener('click', e => {
+      if (e.target.closest('a')) return;
+      const card = e.target.closest('.rep-card[data-rep-idx]');
+      if (!card) return;
+      const repData = allRepsData[parseInt(card.dataset.repIdx)];
+      if (repData) {
+        sessionStorage.setItem('civitas_selected_official', JSON.stringify(repData));
+        window.location.href = '/representative.html';
       }
     });
   </script>
