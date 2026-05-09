@@ -33,11 +33,13 @@ module.exports = async (req, res) => {
     }
 
     const candidates = data.response?.results?.candidates || [];
-    if (candidates.length === 0) {
+    const allOfficials = candidates.flatMap(c => c.officials || []);
+
+    if (allOfficials.length === 0) {
       return res.status(400).json({ error: 'No representatives found for this address.' });
     }
 
-    const firstDistrict = candidates[0]?.office?.district || {};
+    const firstDistrict = allOfficials[0]?.office?.district || {};
     const normalizedInput = {
       city: firstDistrict.city || '',
       state: firstDistrict.state || '',
@@ -46,7 +48,7 @@ module.exports = async (req, res) => {
     const officials = [];
     const offices = [];
 
-    candidates.forEach((candidate, idx) => {
+    allOfficials.forEach((candidate, idx) => {
       const nameParts = [candidate.first_name, candidate.middle_initial, candidate.last_name, candidate.name_suffix];
       const name = nameParts.filter(Boolean).join(' ');
       const phone = candidate.addresses?.[0]?.phone_1 || '';
