@@ -1,3 +1,13 @@
 {
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/api/representatives",
+      "destination": "https://www.googleapis.com/civicinfo/v2/representatives"
+    },
+    {
+      "source": "/api/autocomplete",
+      "destination": "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+    }
+  ]
 }
