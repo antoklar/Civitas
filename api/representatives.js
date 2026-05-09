@@ -1,20 +1,15 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
-  
   const { address } = req.query;
   if (!address) return res.status(400).json({ error: "Address is required" });
-
   const apiKey = process.env.GOOGLE_API_KEY;
-  const encoded = encodeURIComponent(address);
-  const url = `https://www.googleapis.com/civicinfo/v2/representatives?address=${encoded}&key=${apiKey}`;
-
+  const url = `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${apiKey}`;
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const r = await fetch(url);
+    const data = await r.json();
     if (data.error) return res.status(400).json({ error: data.error.message });
     return res.status(200).json(data);
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+  } catch(e) {
+    return res.status(500).json({ error: e.message });
   }
-}
+};
