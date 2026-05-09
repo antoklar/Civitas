@@ -235,7 +235,7 @@
       dropdown.innerHTML = '<div class="ac-loading"><div class="ac-spinner"></div>Finding addresses...</div>';
       dropdown.classList.add('visible');
       try {
-        const res = await fetch(`/api/autocomplete?input=${encodeURIComponent(val)}`);
+        const res = await fetch(`/api/autocomplete?input=${encodeURIComponent(val)}&key=AIzaSyDDwOjC9b-piEAMphOA2wBOtsfAjI4C2CQ&components=country:us&types=geocode`);
         const data = await res.json();
         suggestions = data.suggestions || [];
         activeIdx = -1;
@@ -258,7 +258,7 @@
       searchBtn.disabled = true;
       searchBtn.textContent = '...';
       try {
-        const res = await fetch(`/api/representatives?address=${encodeURIComponent(clean)}`);
+        const res = await fetch(`/api/representatives?address=${encodeURIComponent(clean)}&key=AIzaSyDDwOjC9b-piEAMphOA2wBOtsfAjI4C2CQ`);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         const input = data.normalizedInput || {};
