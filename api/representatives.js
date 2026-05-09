@@ -35,16 +35,6 @@ module.exports = async (req, res) => {
     const candidates = data.response?.results?.candidates || [];
     const allOfficials = candidates.flatMap(c => c.officials || []);
 
-    // DEBUG - remove after testing
-    if (req.query.debug) {
-      return res.status(200).json({
-        candidatesCount: candidates.length,
-        allOfficialsCount: allOfficials.length,
-        firstCandidateKeys: candidates[0] ? Object.keys(candidates[0]) : [],
-        firstOfficialKeys: allOfficials[0] ? Object.keys(allOfficials[0]) : [],
-        rawErrors: data.response?.errors,
-      });
-    }
 
     if (allOfficials.length === 0) {
       return res.status(400).json({ error: 'No representatives found for this address.' });
