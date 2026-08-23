@@ -53,6 +53,28 @@
 
     /* Bio */
     .bio-text p { font-size: 0.95rem; line-height: 1.75; color: var(--ink); margin-bottom: 14px; font-weight: 300; }
+    .bio-source { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+    .bio-source a { color: var(--accent); text-decoration: none; }
+
+    /* Career timeline */
+    .timeline-item { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: flex-start; }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-year { font-family: 'DM Serif Display', serif; font-size: 0.85rem; color: var(--accent); min-width: 90px; flex-shrink: 0; }
+    .timeline-body { flex: 1; }
+    .timeline-label { font-size: 0.9rem; color: var(--ink); font-weight: 500; line-height: 1.4; }
+    .timeline-type { font-size: 0.63rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 3px; }
+
+    /* Voting record */
+    .vote-row { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .vote-row:last-child { border-bottom: none; }
+    .vote-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .vote-question { font-size: 0.9rem; font-weight: 500; color: var(--ink); line-height: 1.4; flex: 1; }
+    .vote-cast { font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; padding: 3px 10px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
+    .vote-cast.yes { background: var(--ind-bg); color: var(--ind); }
+    .vote-cast.no { background: var(--rep-bg); color: var(--rep); }
+    .vote-cast.other { background: #f5f0e8; color: var(--gold); }
+    .vote-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.75rem; color: var(--muted); }
+    .vote-result { font-style: italic; }
 
     /* Committees */
     .committee-item { font-size: 0.875rem; padding: 11px 16px; border: 1px solid var(--border); border-radius: 3px; margin-bottom: 6px; background: var(--card); display: flex; justify-content: space-between; align-items: center; }
@@ -138,6 +160,14 @@
         <div id="bioText"></div>
       </div>
 
+      <div class="section" id="careerSection">
+        <div class="section-header">
+          <span class="section-label">Career &amp; Education</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="careerContent"></div>
+      </div>
+
       <div class="section" id="committeesSection">
         <div class="section-header">
           <span class="section-label">Committees</span>
@@ -152,6 +182,14 @@
           <span class="section-line"></span>
         </div>
         <div id="legislationContent"></div>
+      </div>
+
+      <div class="section" id="votingSection">
+        <div class="section-header">
+          <span class="section-label">Voting Record</span>
+          <span class="section-line"></span>
+        </div>
+        <div id="votingContent"></div>
       </div>
 
       <div class="section" id="donorsSection">
@@ -177,6 +215,7 @@
   <script>
     let official = null;
     let office   = null;
+    let bioguideId = null;
 
     function getPartyClass(party = '') {
       if (/democrat/i.test(party))            return 'party-dem';
@@ -274,6 +313,57 @@
         : '<p class="muted-text">No biographical information available.</p>';
     }
 
+    // ── Career & Education (Wikidata / Wikipedia) ────────────────────────────
+    async function renderCareerTimeline() {
+      const el = document.getElementById('careerContent');
+      el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Looking up career history…</div>';
+
+      try {
+        const r = await fetch(`/api/bio?name=${encodeURIComponent(official.name)}`);
+        const data = await r.json();
+
+        if (!data.found) {
+          el.innerHTML = '<p class="muted-text">No career or education record found on Wikidata for this official.</p>';
+          return;
+        }
+
+        let html = '';
+
+        if (data.wikipediaExtract) {
+          const bioEl = document.getElementById('bioText');
+          if (bioEl.querySelector('.muted-text')) {
+            bioEl.innerHTML = `<p>${data.wikipediaExtract}</p>`;
+          }
+          html += `<p class="bio-source">Career and education data sourced from Wikidata${data.wikipediaUrl ? ` — <a href="${data.wikipediaUrl}" target="_blank" rel="noopener">read more on Wikipedia</a>` : ''}. May be incomplete.</p>`;
+        } else {
+          html += `<p class="bio-source">Career and education data sourced from Wikidata. May be incomplete.</p>`;
+        }
+
+        const TYPE_LABEL = { position: 'Elected / Appointed Position', education: 'Education', membership: 'Board / Organization', employment: 'Employer' };
+
+        if (data.timeline.length) {
+          html += data.timeline.map(t => {
+            const years = t.startYear
+              ? `${t.startYear}${t.endYear && t.endYear !== t.startYear ? '–' + t.endYear : (t.endYear ? '' : '–Present')}`
+              : (t.endYear ? `to ${t.endYear}` : '');
+            return `<div class="timeline-item">
+              <div class="timeline-year">${years}</div>
+              <div class="timeline-body">
+                <div class="timeline-label">${t.label}</div>
+                <div class="timeline-type">${TYPE_LABEL[t.type] || t.type}</div>
+              </div>
+            </div>`;
+          }).join('');
+        } else {
+          html += '<p class="muted-text">No structured career timeline found.</p>';
+        }
+
+        el.innerHTML = html;
+      } catch {
+        el.innerHTML = '<p class="muted-text">Could not load career history.</p>';
+      }
+    }
+
     // ── Committees ────────────────────────────────────────────────────────────
     function renderCommittees() {
       const committees = official.committees || [];
@@ -302,6 +392,7 @@
       if (!isCongressMember()) {
         document.getElementById('legislationSection').style.display =
           office?.levels?.[0] === 'country' ? 'block' : 'none';
+        document.getElementById('votingSection').style.display = 'none';
         if (office?.levels?.[0] === 'country') {
           el.innerHTML = '<p class="muted-text">Legislative activity data is available for U.S. Senators and Representatives.</p>';
         }
@@ -317,8 +408,11 @@
         if (searchData.error) {
           el.innerHTML = `<div class="info-note">Add <strong>CONGRESS_API_KEY</strong> to Vercel environment variables to enable legislative data.</div>`;
           if (searchRes.status !== 503) el.innerHTML = '<p class="muted-text">Member not found in current Congress.</p>';
+          document.getElementById('votingContent').innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
           return;
         }
+
+        bioguideId = searchData.bioguideId;
 
         // Update hero photo if Congress.gov has a better one
         if (searchData.photoUrl && !official.photoUrl) {
@@ -373,18 +467,143 @@
         }
 
         el.innerHTML = html;
+        renderVotingRecord();
 
       } catch {
         el.innerHTML = '<p class="muted-text">Could not load legislative activity.</p>';
+        document.getElementById('votingContent').innerHTML = '<p class="muted-text">Could not load voting record.</p>';
       }
     }
 
-    // ── Donors ────────────────────────────────────────────────────────────────
-    function renderDonors() {
-      document.getElementById('donorsContent').innerHTML = `
-        <div class="coming-soon-box">
-          <p>Donor data coming soon &mdash; will connect to OpenSecrets campaign finance records.</p>
-        </div>`;
+    // ── Voting Record (Congress.gov House roll calls) ────────────────────────
+    async function renderVotingRecord() {
+      const el = document.getElementById('votingContent');
+
+      if (!isCongressMember() || !bioguideId) {
+        document.getElementById('votingSection').style.display = 'none';
+        return;
+      }
+
+      const chamber = getChamber();
+      el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Loading voting record…</div>';
+
+      try {
+        const r = await fetch(`/api/congress?action=votes&bioguideId=${encodeURIComponent(bioguideId)}&chamber=${chamber}`);
+        const data = await r.json();
+
+        if (data.unavailable) {
+          if (data.reason === 'senate') {
+            el.innerHTML = `<div class="info-note">Individual Senate roll-call votes aren't available through the public Congress.gov API — the Senate blocks programmatic access to its vote records. View them directly at <a href="${data.senateRollCallUrl}" target="_blank" rel="noopener">senate.gov</a>.</div>`;
+          } else {
+            el.innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
+          }
+          return;
+        }
+
+        if (!data.votes || !data.votes.length) {
+          el.innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
+          return;
+        }
+
+        el.innerHTML = data.votes.map(v => {
+          const castClass = /yes/i.test(v.castText) ? 'yes' : /no/i.test(v.castText) ? 'no' : 'other';
+          const date = v.date ? new Date(v.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+          return `<div class="vote-row">
+            <div class="vote-header">
+              <div class="vote-question">${v.question || v.legislation || 'Roll call vote'}</div>
+              <span class="vote-cast ${castClass}">${v.castText}</span>
+            </div>
+            <div class="vote-meta">
+              ${v.legislation ? `<span class="bill-number">${v.legislation}</span>` : ''}
+              ${date ? `<span>${date}</span>` : ''}
+              ${v.result ? `<span class="vote-result">${v.result}</span>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      } catch {
+        el.innerHTML = '<p class="muted-text">Could not load voting record.</p>';
+      }
+    }
+
+    // ── Donors (FEC campaign finance) ────────────────────────────────────────
+    async function renderDonors() {
+      const el = document.getElementById('donorsContent');
+
+      if (!isCongressMember()) {
+        el.innerHTML = `<div class="coming-soon-box"><p>Donor data is available for U.S. Senators and Representatives via the FEC. State and local campaign finance sources are coming soon.</p></div>`;
+        return;
+      }
+
+      const chamber = getChamber();
+      el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Loading donor data…</div>';
+
+      try {
+        const r = await fetch(`/api/donors?name=${encodeURIComponent(official.name)}&chamber=${chamber}`);
+        const data = await r.json();
+
+        if (data.error === 'FEC API key not configured') {
+          el.innerHTML = `<div class="info-note">Add <strong>FEC_API_KEY</strong> to Vercel environment variables to enable donor data.</div>`;
+          return;
+        }
+
+        if (!data.found) {
+          el.innerHTML = '<p class="muted-text">No FEC campaign finance record found for this official.</p>';
+          return;
+        }
+
+        let html = '';
+
+        if (data.totals) {
+          html += `<div class="leg-stats">
+            <div class="leg-stat">
+              <div class="leg-stat-num">${fmtMoney(data.totals.receipts)}</div>
+              <div class="leg-stat-label">Total Raised</div>
+            </div>
+            <div class="leg-stat">
+              <div class="leg-stat-num">${fmtMoney(data.totals.individualContributions)}</div>
+              <div class="leg-stat-label">From Individuals</div>
+            </div>
+            <div class="leg-stat">
+              <div class="leg-stat-num">${fmtMoney(data.totals.cashOnHand)}</div>
+              <div class="leg-stat-label">Cash On Hand</div>
+            </div>
+          </div>`;
+        }
+
+        const maxEmployer = Math.max(...data.byEmployer.map(d => d.total), 1);
+        if (data.byEmployer.length) {
+          html += '<div class="section-label" style="margin-bottom:10px;">Top Contributors by Employer / Occupation</div>';
+          html += data.byEmployer.map(d => `
+            <div class="donor-row">
+              <div>
+                <div class="donor-name">${d.label}</div>
+                <div class="donor-bar-wrap"><div class="donor-bar" style="width:${Math.round(d.total / maxEmployer * 100)}%"></div></div>
+              </div>
+              <div class="donor-amount">${fmtMoney(d.total)}</div>
+            </div>
+          `).join('');
+        }
+
+        const maxState = Math.max(...data.byState.map(d => d.total), 1);
+        if (data.byState.length) {
+          html += '<div class="section-label" style="margin:26px 0 10px;">Where Contributions Come From</div>';
+          html += data.byState.map(d => `
+            <div class="donor-row">
+              <div>
+                <div class="donor-name">${d.label}</div>
+                <div class="donor-bar-wrap"><div class="donor-bar" style="width:${Math.round(d.total / maxState * 100)}%"></div></div>
+              </div>
+              <div class="donor-amount">${fmtMoney(d.total)}</div>
+            </div>
+          `).join('');
+        }
+
+        html += `<p class="bio-source">Source: Federal Election Commission — <a href="${data.fecUrl}" target="_blank" rel="noopener">full record on FEC.gov</a>.</p>`;
+
+        el.innerHTML = html;
+      } catch {
+        el.innerHTML = '<p class="muted-text">Could not load donor data.</p>';
+      }
     }
 
     // ── Contact ───────────────────────────────────────────────────────────────
@@ -435,6 +654,7 @@
 
       renderHero();
       renderBio();
+      renderCareerTimeline();
       renderCommittees();
       renderLegislation();
       renderDonors();
