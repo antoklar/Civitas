@@ -1,17 +1,12 @@
-const DISTRICT_TYPE_TO_LEVEL = {
-  NATIONAL_EXEC: 'country',
-  NATIONAL_UPPER: 'country',
-  NATIONAL_LOWER: 'country',
-  STATE_EXEC: 'administrativeArea1',
-  STATE_UPPER: 'administrativeArea1',
-  STATE_LOWER: 'administrativeArea1',
-  LOCAL_EXEC: 'locality',
-  LOCAL_UPPER: 'locality',
-  LOCAL_LOWER: 'locality',
-  CITY_EXEC: 'locality',
-  COUNTY_EXEC: 'administrativeArea2',
-  COUNTY_UPPER: 'administrativeArea2',
-  COUNTY_LOWER: 'administrativeArea2',
+// Representatives lookup — calls the Google Civic Information API directly.
+// Free / public; uses the same GOOGLE_API_KEY as /api/autocomplete. No paid APIs.
+
+const CHANNEL_TO_IDENTIFIER = {
+  Twitter: 'TWITTER',
+  Facebook: 'FACEBOOK',
+  YouTube: 'YOUTUBE',
+  Instagram: 'INSTAGRAM',
+  GooglePlus: 'GOOGLEPLUS',
 };
 
 module.exports = async (req, res) => {
@@ -21,65 +16,68 @@ module.exports = async (req, res) => {
   const { address } = req.query;
   if (!address) return res.status(400).json({ error: 'Address is required' });
 
-  const apiKey = process.env.CICERO_API_KEY;
-  const url = `https://app.cicerodata.com/v3.1/official?search_loc=${encodeURIComponent(address)}&format=json&key=${apiKey}`;
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'GOOGLE_API_KEY not configured' });
+
+  const url = `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
   try {
     const r = await fetch(url);
     const data = await r.json();
 
-    if (data.response?.errors?.length) {
-      return res.status(400).json({ error: data.response.errors[0] });
+    if (data.error) {
+      return res.status(data.error.code || 400).json({ error: data.error.message || 'Lookup failed' });
     }
 
-    const candidates = data.response?.results?.candidates || [];
-    const allOfficials = candidates.flatMap(c => c.officials || []);
+    const rawOfficials = data.officials || [];
+    const rawOffices = data.offices || [];
 
-    if (allOfficials.length === 0) {
+    if (rawOfficials.length === 0) {
       return res.status(400).json({ error: 'No representatives found for this address.' });
     }
 
-    const normalizedInput = {
-      city: candidates[0]?.match_city || '',
-      state: candidates[0]?.match_region || '',
-    };
+    const ni = data.normalizedInput || {};
+    const normalizedInput = { city: ni.city || '', state: ni.state || '' };
 
-    const officials = [];
-    const offices = [];
+    // Normalize Google Civic's shape into the shape the frontend already consumes.
+    const officials = rawOfficials.map(o => {
+      const phone = (o.phones || [])[0] || '';
 
-    allOfficials.forEach((candidate, idx) => {
-      const nameParts = [candidate.first_name, candidate.middle_initial, candidate.last_name, candidate.name_suffix];
-      const name = nameParts.filter(Boolean).join(' ');
-      const phone = candidate.addresses?.[0]?.phone_1 || '';
-      const siteUrl = candidate.urls?.[0] || '';
-      const photoUrl = candidate.photo_origin_url || '';
+      const addresses = (o.address || []).map(a => ({
+        address_1: a.line1 || '',
+        address_2: [a.line2, a.line3].filter(Boolean).join(', '),
+        city: a.city || '',
+        state: a.state || '',
+        postal_code: a.zip || '',
+        phone_1: phone,
+        fax_1: '',
+      }));
 
-      officials.push({
-        name,
-        party: candidate.party || '',
-        phones: phone ? [phone] : [],
-        urls: siteUrl ? [siteUrl] : [],
-        photoUrl: photoUrl || undefined,
-        addresses: candidate.addresses || [],
-        emailAddresses: candidate.email_addresses || [],
-        notes: candidate.notes || [],
-        committees: candidate.committees || [],
-        identifiers: candidate.identifiers || [],
-        termStart: candidate.current_term_start_date || '',
-        termEnd: candidate.term_end_date || '',
-      });
+      const identifiers = (o.channels || [])
+        .filter(c => c.id && CHANNEL_TO_IDENTIFIER[c.type])
+        .map(c => ({ identifier_type: CHANNEL_TO_IDENTIFIER[c.type], identifier: c.id }));
 
-      const districtType = candidate.office?.district?.district_type || '';
-      const level = DISTRICT_TYPE_TO_LEVEL[districtType] || 'locality';
-      const officeName = candidate.office?.title || 'Unknown Office';
-
-      const existing = offices.find(o => o.name === officeName && o.levels[0] === level);
-      if (existing) {
-        existing.officialIndices.push(idx);
-      } else {
-        offices.push({ name: officeName, levels: [level], officialIndices: [idx] });
-      }
+      return {
+        name: o.name || '',
+        party: o.party || '',
+        phones: o.phones || [],
+        urls: o.urls || [],
+        photoUrl: o.photoUrl || undefined,
+        addresses,
+        emailAddresses: o.emails || [],
+        notes: [],
+        committees: [],
+        identifiers,
+        termStart: '',
+        termEnd: '',
+      };
     });
+
+    const offices = rawOffices.map(office => ({
+      name: office.name || 'Unknown Office',
+      levels: office.levels && office.levels.length ? office.levels : ['locality'],
+      officialIndices: office.officialIndices || [],
+    }));
 
     return res.status(200).json({ normalizedInput, offices, officials });
   } catch (e) {
