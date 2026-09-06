@@ -5,11 +5,22 @@ function fecFetch(path, apiKey) {
   return fetch(`${BASE}${path}${sep}api_key=${apiKey}`);
 }
 
+// FEC contribution data carries placeholder employer/occupation strings that
+// aren't real donor categories — drop them before they reach the UI.
+function isJunkLabel(value) {
+  if (value == null) return true;
+  const v = String(value).trim().toUpperCase();
+  if (!v) return true;
+  if (['NULL', 'NONE', 'N/A', 'NA', 'UNKNOWN'].includes(v)) return true;
+  if (v.includes('INFORMATION REQUESTED')) return true; // incl. "…PER BEST EFFORTS"
+  return false;
+}
+
 function aggregate(rows, keyField, labelField) {
   const map = new Map();
   rows.forEach(r => {
     const key = r[keyField];
-    if (!key) return;
+    if (!key || isJunkLabel(key)) return;
     const existing = map.get(key) || { total: 0, count: 0, label: labelField ? r[labelField] : key };
     existing.total += r.total || 0;
     existing.count += r.count || 0;

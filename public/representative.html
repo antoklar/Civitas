@@ -366,9 +366,15 @@
 
     // ── Committees ────────────────────────────────────────────────────────────
     function renderCommittees() {
-      const committees = official.committees || [];
       const el = document.getElementById('committeesList');
 
+      // Federal members: real assignments load once we have a bioguideId.
+      if (isCongressMember()) {
+        el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Loading committee assignments…</div>';
+        return;
+      }
+
+      const committees = official.committees || [];
       if (!committees.length) {
         el.innerHTML = '<p class="muted-text">No committee information available.</p>';
         return;
@@ -376,13 +382,38 @@
 
       el.innerHTML = committees.map(c => {
         const name = typeof c === 'string' ? c : (c.name || '');
-        const role = typeof c === 'object' ? (c.position || c.side || '') : '';
+        const role = typeof c === 'object' ? (c.role || c.position || c.side || '') : '';
         if (!name) return '';
         return `<div class="committee-item">
           <span>${name}</span>
-          ${role ? `<span class="committee-role">${role}</span>` : ''}
+          ${role && role !== 'Member' ? `<span class="committee-role">${role}</span>` : ''}
         </div>`;
       }).filter(Boolean).join('');
+    }
+
+    // Committee & subcommittee assignments for U.S. Senators / Representatives.
+    async function loadCongressCommittees() {
+      const el = document.getElementById('committeesList');
+      if (!isCongressMember() || !bioguideId) return;
+
+      try {
+        const r = await fetch(`/api/congress?action=committees&bioguideId=${encodeURIComponent(bioguideId)}`);
+        const data = await r.json();
+        const committees = data.committees || [];
+
+        if (!committees.length) {
+          el.innerHTML = '<p class="muted-text">No current committee assignments found for this member.</p>';
+          return;
+        }
+
+        el.innerHTML = committees.map(c => `
+          <div class="committee-item">
+            <span>${c.name}</span>
+            ${c.role && c.role !== 'Member' ? `<span class="committee-role">${c.role}</span>` : ''}
+          </div>`).join('');
+      } catch {
+        el.innerHTML = '<p class="muted-text">Could not load committee assignments.</p>';
+      }
     }
 
     // ── Legislative activity (Congress.gov) ──────────────────────────────────
@@ -409,10 +440,12 @@
           el.innerHTML = `<div class="info-note">Add <strong>CONGRESS_API_KEY</strong> to Vercel environment variables to enable legislative data.</div>`;
           if (searchRes.status !== 503) el.innerHTML = '<p class="muted-text">Member not found in current Congress.</p>';
           document.getElementById('votingContent').innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
+          document.getElementById('committeesList').innerHTML = '<p class="muted-text">No committee information available.</p>';
           return;
         }
 
         bioguideId = searchData.bioguideId;
+        loadCongressCommittees();
 
         // Update hero photo if Congress.gov has a better one
         if (searchData.photoUrl && !official.photoUrl) {
@@ -472,6 +505,8 @@
       } catch {
         el.innerHTML = '<p class="muted-text">Could not load legislative activity.</p>';
         document.getElementById('votingContent').innerHTML = '<p class="muted-text">Could not load voting record.</p>';
+        const cEl = document.getElementById('committeesList');
+        if (cEl.querySelector('.mini-spinner')) cEl.innerHTML = '<p class="muted-text">Could not load committee assignments.</p>';
       }
     }
 
@@ -493,7 +528,7 @@
 
         if (data.unavailable) {
           if (data.reason === 'senate') {
-            el.innerHTML = `<div class="info-note">Individual Senate roll-call votes aren't available through the public Congress.gov API — the Senate blocks programmatic access to its vote records. View them directly at <a href="${data.senateRollCallUrl}" target="_blank" rel="noopener">senate.gov</a>.</div>`;
+            el.innerHTML = `<div class="info-note">This member's recent Senate roll-call votes couldn't be retrieved right now. View the full record at <a href="${data.senateRollCallUrl}" target="_blank" rel="noopener">senate.gov</a>.</div>`;
           } else {
             el.innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
           }
@@ -506,11 +541,16 @@
         }
 
         el.innerHTML = data.votes.map(v => {
-          const castClass = /yes/i.test(v.castText) ? 'yes' : /no/i.test(v.castText) ? 'no' : 'other';
+          const t = (v.castText || '').toLowerCase();
+          const castClass = t.includes('yes') ? 'yes'
+                          : (t.includes('no') && !t.includes('not')) ? 'no'
+                          : 'other';
           const date = v.date ? new Date(v.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
+          let q = v.question || v.legislation || 'Roll call vote';
+          if (q.length > 140) q = q.slice(0, 140) + '…';
           return `<div class="vote-row">
             <div class="vote-header">
-              <div class="vote-question">${v.question || v.legislation || 'Roll call vote'}</div>
+              <div class="vote-question">${q}</div>
               <span class="vote-cast ${castClass}">${v.castText}</span>
             </div>
             <div class="vote-meta">
@@ -549,6 +589,12 @@
         if (!data.found) {
           el.innerHTML = '<p class="muted-text">No FEC campaign finance record found for this official.</p>';
           return;
+        }
+
+        // Defensive: drop FEC placeholder categories the API sometimes returns.
+        const junkLabel = /^(null|none|n\/a|na|unknown|information requested)\b/i;
+        if (Array.isArray(data.byEmployer)) {
+          data.byEmployer = data.byEmployer.filter(d => d.label && !junkLabel.test(String(d.label).trim()));
         }
 
         let html = '';
