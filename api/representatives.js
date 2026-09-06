@@ -92,6 +92,7 @@ function buildFederal(legislators, social, stateAbbr, cd) {
     const idx = officials.length;
     officials.push({
       name: leg.name?.official_full || `${leg.name?.first || ''} ${leg.name?.last || ''}`.trim(),
+      bioguideId: bioguide || null,
       party: term.party || '',
       phones: term.phone ? [term.phone] : [],
       urls: term.url ? [term.url] : [],

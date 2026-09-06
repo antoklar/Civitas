@@ -311,30 +311,43 @@ module.exports = async (req, res) => {
   if (!apiKey) return res.status(503).json({ error: 'Congress API key not configured' });
 
   try {
-    // ── Search: find a member by name ────────────────────────────────────────
+    // ── Search: resolve a member by bioguide id (preferred) or by name ──────
     if (action === 'search') {
-      if (!name) return res.status(400).json({ error: 'name required' });
+      let bioguideId = req.query.bioguideId || null;
+      let listParty  = '';
+      let listState  = '';
 
-      const r    = await congressFetch('/member?limit=600&currentMember=true', apiKey);
-      const data = await r.json();
-      const members = data.members || [];
+      if (!bioguideId) {
+        if (!name) return res.status(400).json({ error: 'name or bioguideId required' });
 
-      const match = members.find(m => nameMatch(m.name, name));
-      if (!match) return res.status(404).json({ error: 'Member not found in current Congress' });
+        const r    = await congressFetch('/member?limit=600&currentMember=true', apiKey);
+        const data = await r.json();
+        const members = data.members || [];
 
-      const pr    = await congressFetch(`/member/${match.bioguideId}`, apiKey);
+        const match = members.find(m => nameMatch(m.name, name));
+        if (!match) return res.status(404).json({ error: 'Member not found in current Congress' });
+        bioguideId = match.bioguideId;
+        listParty  = match.partyName || '';
+        listState  = match.state || '';
+      }
+
+      const pr    = await congressFetch(`/member/${bioguideId}`, apiKey);
       const pdata = await pr.json();
       const m     = pdata.member || {};
+      if (!m.directOrderName && !m.invertedOrderName && !m.terms) {
+        return res.status(404).json({ error: 'Member not found in current Congress' });
+      }
 
-      const latestParty = (m.partyHistory || []).slice(-1)[0]?.partyName || match.partyName || '';
-      const latestTerm  = (m.terms || []).slice(-1)[0] || {};
-      const photoUrl    = m.depiction?.imageUrl || `https://www.congress.gov/img/member/${match.bioguideId.toLowerCase()}_200.jpg`;
+      const termsArr    = Array.isArray(m.terms) ? m.terms : (m.terms?.item || []);
+      const latestParty = (m.partyHistory || []).slice(-1)[0]?.partyName || listParty || '';
+      const latestTerm  = termsArr.slice(-1)[0] || {};
+      const photoUrl    = m.depiction?.imageUrl || `https://www.congress.gov/img/member/${bioguideId.toLowerCase()}_200.jpg`;
 
       return res.status(200).json({
-        bioguideId:        match.bioguideId,
-        name:              m.directOrderName || name,
+        bioguideId,
+        name:              m.directOrderName || name || m.invertedOrderName || '',
         party:             latestParty,
-        state:             m.state || match.state,
+        state:             m.state || listState,
         birthYear:         m.birthYear || null,
         chamber:           latestTerm.memberType || '',
         termStart:         latestTerm.startYear || '',

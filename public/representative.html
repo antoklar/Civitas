@@ -432,20 +432,40 @@
 
       el.innerHTML = '<div class="loading-inline"><div class="mini-spinner"></div>Loading legislative activity…</div>';
 
+      // Prefer the bioguide id we already have from /api/representatives so that
+      // votes and committees never depend on a fuzzy name match succeeding.
+      if (official.bioguideId) {
+        bioguideId = official.bioguideId;
+        loadCongressCommittees();
+        renderVotingRecord();
+      }
+
       try {
-        const searchRes  = await fetch(`/api/congress?action=search&name=${encodeURIComponent(official.name)}`);
+        const searchUrl = bioguideId
+          ? `/api/congress?action=search&bioguideId=${encodeURIComponent(bioguideId)}`
+          : `/api/congress?action=search&name=${encodeURIComponent(official.name)}`;
+        const searchRes  = await fetch(searchUrl);
         const searchData = await searchRes.json();
 
         if (searchData.error) {
-          el.innerHTML = `<div class="info-note">Add <strong>CONGRESS_API_KEY</strong> to Vercel environment variables to enable legislative data.</div>`;
-          if (searchRes.status !== 503) el.innerHTML = '<p class="muted-text">Member not found in current Congress.</p>';
-          document.getElementById('votingContent').innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
-          document.getElementById('committeesList').innerHTML = '<p class="muted-text">No committee information available.</p>';
+          if (!bioguideId) {
+            el.innerHTML = searchRes.status === 503
+              ? `<div class="info-note">Add <strong>CONGRESS_API_KEY</strong> to Vercel environment variables to enable legislative data.</div>`
+              : '<p class="muted-text">Member not found in current Congress.</p>';
+            document.getElementById('votingContent').innerHTML = '<p class="muted-text">No recent roll-call vote data found.</p>';
+            document.getElementById('committeesList').innerHTML = '<p class="muted-text">No committee information available.</p>';
+            return;
+          }
+          // We still know who this is — votes/committees are already loading.
+          el.innerHTML = '<p class="muted-text">Legislative activity could not be loaded right now.</p>';
           return;
         }
 
-        bioguideId = searchData.bioguideId;
-        loadCongressCommittees();
+        if (!bioguideId) {
+          bioguideId = searchData.bioguideId;
+          loadCongressCommittees();
+          renderVotingRecord();
+        }
 
         // Update hero photo if Congress.gov has a better one
         if (searchData.photoUrl && !official.photoUrl) {
@@ -459,7 +479,7 @@
         }
 
         // Fetch legislation in parallel with stats display
-        const legRes  = await fetch(`/api/congress?action=legislation&id=${searchData.bioguideId}`);
+        const legRes  = await fetch(`/api/congress?action=legislation&id=${bioguideId}`);
         const legData = await legRes.json();
 
         let html = '';
@@ -500,11 +520,12 @@
         }
 
         el.innerHTML = html;
-        renderVotingRecord();
+        if (!bioguideId) renderVotingRecord();
 
       } catch {
         el.innerHTML = '<p class="muted-text">Could not load legislative activity.</p>';
-        document.getElementById('votingContent').innerHTML = '<p class="muted-text">Could not load voting record.</p>';
+        const vEl = document.getElementById('votingContent');
+        if (vEl.querySelector('.mini-spinner')) vEl.innerHTML = '<p class="muted-text">Could not load voting record.</p>';
         const cEl = document.getElementById('committeesList');
         if (cEl.querySelector('.mini-spinner')) cEl.innerHTML = '<p class="muted-text">Could not load committee assignments.</p>';
       }
