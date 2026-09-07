@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="192" height="192">
+  <rect width="512" height="512" rx="96" fill="#f4f1eb"/>
+  <ellipse cx="256" cy="404" rx="142" ry="9" fill="#0f1923" opacity="0.08"/>
+
+  <!-- steps / base -->
+  <rect x="120" y="378" width="272" height="22" rx="3" fill="#b5371f"/>
+  <rect x="136" y="356" width="240" height="22" rx="3" fill="#b5371f"/>
+  <rect x="152" y="334" width="208" height="22" rx="3" fill="#b5371f"/>
+
+  <!-- main block -->
+  <rect x="156" y="256" width="200" height="80" fill="#b5371f"/>
+
+  <!-- columns -->
+  <rect x="168" y="256" width="15" height="80" fill="#f4f1eb"/>
+  <rect x="203" y="256" width="15" height="80" fill="#f4f1eb"/>
+  <rect x="238" y="256" width="15" height="80" fill="#f4f1eb"/>
+  <rect x="273" y="256" width="15" height="80" fill="#f4f1eb"/>
+  <rect x="308" y="256" width="15" height="80" fill="#f4f1eb"/>
+  <rect x="343" y="256" width="15" height="80" fill="#f4f1eb"/>
+
+  <!-- pediment -->
+  <polygon points="146,256 366,256 256,192" fill="#b5371f"/>
+
+  <!-- dome drum -->
+  <rect x="222" y="152" width="68" height="42" fill="#b5371f"/>
+
+  <!-- dome -->
+  <path d="M 222 152 A 34 46 0 0 1 290 152 Z" fill="#b5371f"/>
+
+  <!-- lantern + pinnacle -->
+  <rect x="248" y="112" width="16" height="42" fill="#b5371f"/>
+  <circle cx="256" cy="104" r="9" fill="#c9973a"/>
+</svg>
