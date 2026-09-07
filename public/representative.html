@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title id="metaTitle">Representative Profile | Civitas</title>
   <meta name="description" id="metaDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
-  <link rel="canonical" id="canonicalLink" href="https://civitasus.com/representative.html">
+  <link rel="canonical" id="canonicalLink" href="https://www.civitasus.com/representative.html">
 
   <meta property="og:site_name" content="Civitas">
   <meta property="og:type" content="profile">
   <meta property="og:title" id="ogTitle" content="Representative Profile | Civitas">
   <meta property="og:description" id="ogDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
-  <meta property="og:url" id="ogUrl" content="https://civitasus.com/representative.html">
-  <meta property="og:image" id="ogImage" content="https://civitasus.com/icons/icon-512.png">
+  <meta property="og:url" id="ogUrl" content="https://www.civitasus.com/representative.html">
+  <meta property="og:image" id="ogImage" content="https://www.civitasus.com/icons/icon-512.png">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" id="twitterTitle" content="Representative Profile | Civitas">
   <meta name="twitter:description" id="twitterDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
-  <meta name="twitter:image" id="twitterImage" content="https://civitasus.com/icons/icon-512.png">
+  <meta name="twitter:image" id="twitterImage" content="https://www.civitasus.com/icons/icon-512.png">
 
   <script type="application/ld+json" id="personSchema">{"@context":"https://schema.org","@type":"ProfilePage","name":"Representative Profile | Civitas"}</script>
 
@@ -326,8 +326,8 @@
         ? buildRepTitle(official.name, officeName)
         : (officeName ? `${official.name} - ${officeName} | Civitas` : `${official.name} | Civitas`);
       const description = buildRepDescription(official.name, officeName);
-      const pageUrl = `https://civitasus.com/representative.html${hasBioguide ? '?bioguide=' + encodeURIComponent(official.bioguideId) : ''}`;
-      const image = official.photoUrl || 'https://civitasus.com/icons/icon-512.png';
+      const pageUrl = `https://www.civitasus.com/representative.html${hasBioguide ? '?bioguide=' + encodeURIComponent(official.bioguideId) : ''}`;
+      const image = official.photoUrl || 'https://www.civitasus.com/icons/icon-512.png';
 
       document.title = title;
       setAttrIfPresent('metaDescription', 'content', description);

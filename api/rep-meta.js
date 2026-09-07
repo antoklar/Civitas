@@ -87,10 +87,10 @@ module.exports = async (req, res) => {
     // Normalize full state name in case the upstream ever returns an abbreviation.
     m.state = STATE_NAMES[m.state] || m.state;
 
-    const pageUrl = `https://civitasus.com/representative.html?bioguide=${encodeURIComponent(bioguideId)}`;
+    const pageUrl = `https://www.civitasus.com/representative.html?bioguide=${encodeURIComponent(bioguideId)}`;
     const title = buildTitle(m);
     const description = buildDescription(m);
-    const image = m.photoUrl || 'https://civitasus.com/icons/icon-512.png';
+    const image = m.photoUrl || 'https://www.civitasus.com/icons/icon-512.png';
 
     html = setTitleById(html, 'metaTitle', title);
     html = setMetaContentById(html, 'metaDescription', description);

@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 
 const LEG_URL = 'https://unitedstates.github.io/congress-legislators/legislators-current.json';
-const SITE = 'https://civitasus.com';
+const SITE = 'https://www.civitasus.com';
 
 async function main() {
   const res = await fetch(LEG_URL);
