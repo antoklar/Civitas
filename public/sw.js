@@ -1,8 +1,9 @@
-const CACHE_NAME = 'civitas-v1';
+const CACHE_NAME = 'civitas-v2';
 const CORE_ASSETS = [
   '/',
   '/index.html',
   '/representative.html',
+  '/about.html',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg',

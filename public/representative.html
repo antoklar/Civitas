@@ -3,8 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Representative — Civitas</title>
-  <meta name="description" content="Full representative profile on Civitas." />
+  <title id="metaTitle">Representative Profile | Civitas</title>
+  <meta name="description" id="metaDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
+  <link rel="canonical" id="canonicalLink" href="https://civitasus.com/representative.html">
+
+  <meta property="og:site_name" content="Civitas">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" id="ogTitle" content="Representative Profile | Civitas">
+  <meta property="og:description" id="ogDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
+  <meta property="og:url" id="ogUrl" content="https://civitasus.com/representative.html">
+  <meta property="og:image" id="ogImage" content="https://civitasus.com/icons/icon-512.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitterTitle" content="Representative Profile | Civitas">
+  <meta name="twitter:description" id="twitterDescription" content="Explore a representative's voting record, committees, sponsored legislation, and campaign donors on Civitas.">
+  <meta name="twitter:image" id="twitterImage" content="https://civitasus.com/icons/icon-512.png">
+
+  <script type="application/ld+json" id="personSchema">{"@context":"https://schema.org","@type":"ProfilePage","name":"Representative Profile | Civitas"}</script>
 
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#b5371f" />
@@ -259,9 +274,142 @@
       return '';
     }
 
+    // ── SEO helpers ───────────────────────────────────────────────────────────
+    const STATE_NAMES = {
+      AL:'Alabama', AK:'Alaska', AZ:'Arizona', AR:'Arkansas', CA:'California', CO:'Colorado',
+      CT:'Connecticut', DE:'Delaware', FL:'Florida', GA:'Georgia', HI:'Hawaii', ID:'Idaho',
+      IL:'Illinois', IN:'Indiana', IA:'Iowa', KS:'Kansas', KY:'Kentucky', LA:'Louisiana',
+      ME:'Maine', MD:'Maryland', MA:'Massachusetts', MI:'Michigan', MN:'Minnesota', MS:'Mississippi',
+      MO:'Missouri', MT:'Montana', NE:'Nebraska', NV:'Nevada', NH:'New Hampshire', NJ:'New Jersey',
+      NM:'New Mexico', NY:'New York', NC:'North Carolina', ND:'North Dakota', OH:'Ohio',
+      OK:'Oklahoma', OR:'Oregon', PA:'Pennsylvania', RI:'Rhode Island', SC:'South Carolina',
+      SD:'South Dakota', TN:'Tennessee', TX:'Texas', UT:'Utah', VT:'Vermont', VA:'Virginia',
+      WA:'Washington', WV:'West Virginia', WI:'Wisconsin', WY:'Wyoming', DC:'District of Columbia',
+      PR:'Puerto Rico', GU:'Guam', VI:'U.S. Virgin Islands', AS:'American Samoa', MP:'Northern Mariana Islands',
+    };
+    const NAME_TO_ABBR = Object.fromEntries(Object.entries(STATE_NAMES).map(([k, v]) => [v, k]));
+
+    function extractStateAbbr(officeName = '') {
+      const m = /,\s*([A-Z]{2})\b/.exec(officeName);
+      return m ? m[1] : '';
+    }
+
+    function buildRepTitle(name, officeName = '') {
+      const abbr = extractStateAbbr(officeName);
+      const stateFull = STATE_NAMES[abbr] || abbr;
+      if (/senator/i.test(officeName)) {
+        return `${name} - U.S. Senator${stateFull ? ' ' + stateFull : ''} | Civitas`;
+      }
+      if (/representative/i.test(officeName)) {
+        const atLarge = /At-?Large/i.test(officeName);
+        const distMatch = /District\s+(\d+)/i.exec(officeName);
+        const districtPart = atLarge ? ', At-Large' : (distMatch ? `, District ${distMatch[1]}` : '');
+        return `${name} - U.S. Representative${stateFull ? `, ${stateFull}` : ''}${districtPart} | Civitas`;
+      }
+      return officeName ? `${name} - ${officeName} | Civitas` : `${name} | Civitas`;
+    }
+
+    function buildRepDescription(name, officeName = '') {
+      const label = officeName ? officeName.replace(/^,\s*/, '') : 'elected official';
+      return `${name} is the ${label}. See voting record, committee assignments, sponsored legislation, and campaign donors on Civitas.`;
+    }
+
+    function setAttrIfPresent(id, attr, value) {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute(attr, value);
+    }
+
+    function updateSEO() {
+      const officeName = office?.name || '';
+      const hasBioguide = !!official.bioguideId;
+      const title = hasBioguide
+        ? buildRepTitle(official.name, officeName)
+        : (officeName ? `${official.name} - ${officeName} | Civitas` : `${official.name} | Civitas`);
+      const description = buildRepDescription(official.name, officeName);
+      const pageUrl = `https://civitasus.com/representative.html${hasBioguide ? '?bioguide=' + encodeURIComponent(official.bioguideId) : ''}`;
+      const image = official.photoUrl || 'https://civitasus.com/icons/icon-512.png';
+
+      document.title = title;
+      setAttrIfPresent('metaDescription', 'content', description);
+      setAttrIfPresent('canonicalLink', 'href', pageUrl);
+      setAttrIfPresent('ogTitle', 'content', title);
+      setAttrIfPresent('ogDescription', 'content', description);
+      setAttrIfPresent('ogUrl', 'content', pageUrl);
+      setAttrIfPresent('ogImage', 'content', image);
+      setAttrIfPresent('twitterTitle', 'content', title);
+      setAttrIfPresent('twitterDescription', 'content', description);
+      setAttrIfPresent('twitterImage', 'content', image);
+
+      const sameAs = [];
+      (official.identifiers || []).forEach(id => {
+        const val = id.identifier;
+        if (!val) return;
+        if (id.identifier_type === 'TWITTER')   sameAs.push(`https://twitter.com/${val}`);
+        if (id.identifier_type === 'FACEBOOK')  sameAs.push(`https://facebook.com/${val}`);
+        if (id.identifier_type === 'YOUTUBE')   sameAs.push(`https://youtube.com/${val}`);
+        if (id.identifier_type === 'INSTAGRAM') sameAs.push(`https://instagram.com/${val}`);
+      });
+      if (official.urls?.[0]) sameAs.push(official.urls[0]);
+
+      const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        name: official.name,
+        jobTitle: officeName || undefined,
+        image: official.photoUrl || undefined,
+        url: pageUrl,
+        sameAs: sameAs.length ? sameAs : undefined,
+        memberOf: official.party ? { '@type': 'Organization', name: official.party } : undefined,
+      };
+      const schemaEl = document.getElementById('personSchema');
+      if (schemaEl) schemaEl.textContent = JSON.stringify(jsonLd);
+    }
+
+    // Reconstruct official/office from a bare bioguide id — supports direct
+    // loads, reloads, and social shares of /representative.html?bioguide=ID
+    // (the search flow only ever populates sessionStorage, which doesn't
+    // survive a fresh navigation).
+    async function loadFromBioguide(id) {
+      try {
+        const r = await fetch(`/api/congress?action=search&bioguideId=${encodeURIComponent(id)}`);
+        if (!r.ok) return false;
+        const m = await r.json();
+        if (m.error) return false;
+
+        const abbr = NAME_TO_ABBR[m.state] || m.state || '';
+        const isSen = /senator/i.test(m.chamber || '');
+        const districtSuffix = m.district === 0
+          ? 'At-Large'
+          : (m.district !== null && m.district !== undefined && m.district !== '' ? `District ${m.district}` : '');
+        const officeName = isSen
+          ? `U.S. Senator, ${abbr}`
+          : `U.S. Representative, ${abbr}${districtSuffix ? ' ' + districtSuffix : ''}`;
+
+        official = {
+          name: m.name,
+          bioguideId: m.bioguideId,
+          party: m.party || '',
+          phones: [],
+          urls: [],
+          photoUrl: m.photoUrl,
+          addresses: [],
+          emailAddresses: [],
+          notes: [],
+          committees: [],
+          identifiers: [],
+          termStart: m.termStart ? `${m.termStart}-01-01` : '',
+          termEnd: m.termEnd ? `${m.termEnd}-01-01` : '',
+        };
+        office = { name: officeName, levels: ['country'] };
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
     // ── Hero ──────────────────────────────────────────────────────────────────
     function renderHero() {
-      document.title = `${official.name} — Civitas`;
+      updateSEO();
 
       const avatarEl = document.getElementById('heroAvatar');
       if (official.photoUrl) {
@@ -715,19 +863,7 @@
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    function init() {
-      const stored = sessionStorage.getItem('civitas_selected_official');
-      if (!stored) { window.location.href = '/'; return; }
-
-      try {
-        const data = JSON.parse(stored);
-        official = data.official;
-        office   = data.office;
-      } catch {
-        window.location.href = '/';
-        return;
-      }
-
+    function renderAll() {
       renderHero();
       renderBio();
       renderCareerTimeline();
@@ -735,6 +871,29 @@
       renderLegislation();
       renderDonors();
       renderContact();
+    }
+
+    async function init() {
+      const stored = sessionStorage.getItem('civitas_selected_official');
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          official = data.official;
+          office   = data.office;
+          renderAll();
+          return;
+        } catch {
+          // fall through to bioguide/redirect handling below
+        }
+      }
+
+      const bioguideId = new URLSearchParams(window.location.search).get('bioguide');
+      if (bioguideId) {
+        const ok = await loadFromBioguide(bioguideId);
+        if (ok) { renderAll(); return; }
+      }
+
+      window.location.href = '/';
     }
 
     init();

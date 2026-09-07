@@ -114,7 +114,7 @@ function buildFederal(legislators, social, stateAbbr, cd) {
     if (!term || term.state !== stateAbbr) return;
 
     if (term.type === 'sen') {
-      add(leg, term, 'U.S. Senator');
+      add(leg, term, `U.S. Senator, ${term.state}`);
     } else if (term.type === 'rep' && cd != null && Number(term.district) === Number(cd)) {
       add(leg, term, `U.S. Representative, ${term.state} ${cd === 0 ? 'At-Large' : `District ${cd}`}`);
     }

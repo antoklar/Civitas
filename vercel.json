@@ -1,3 +1,10 @@
 {
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "rewrites": [
+    {
+      "source": "/representative.html",
+      "has": [{ "type": "query", "key": "bioguide" }],
+      "destination": "/api/rep-meta"
+    }
+  ]
 }

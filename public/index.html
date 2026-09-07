@@ -4,7 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Civitas — Know Your Government</title>
-  <meta name="description" content="Find your representatives at every level of government." />
+  <meta name="description" content="Find every elected official who represents you — from city hall to Capitol Hill. Enter your address to see voting records, committees, campaign donors, and contact info, sourced from public government data." />
+  <link rel="canonical" href="https://civitasus.com/" />
+
+  <meta property="og:site_name" content="Civitas" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Civitas — Know Your Government" />
+  <meta property="og:description" content="Find every elected official who represents you — from city hall to Capitol Hill. Voting records, committees, donors, and contact info in one place." />
+  <meta property="og:url" content="https://civitasus.com/" />
+  <meta property="og:image" content="https://civitasus.com/icons/icon-512.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Civitas — Know Your Government" />
+  <meta name="twitter:description" content="Find every elected official who represents you — from city hall to Capitol Hill. Voting records, committees, donors, and contact info in one place." />
+  <meta name="twitter:image" content="https://civitasus.com/icons/icon-512.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Civitas",
+    "url": "https://civitasus.com/",
+    "description": "Find every elected official who represents you — from city hall to Capitol Hill.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://civitasus.com/?address={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
 
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#b5371f" />
@@ -107,6 +135,8 @@
     .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
     .footer-note { font-size: 0.75rem; color: var(--muted); }
+    .footer-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .footer-note a:hover { color: var(--ink); }
     @media (max-width: 600px) {
       .header { grid-template-columns: 1fr; }
       .brand-version { display: none; }
@@ -165,7 +195,7 @@
 
     <footer class="footer">
       <span class="footer-brand">Civitas</span>
-      <span class="footer-note">Information is power. So is knowing who to call.</span>
+      <span class="footer-note">Information is power. So is knowing who to call. · <a href="/about.html">About Civitas</a></span>
     </footer>
   </div>
 
@@ -374,9 +404,23 @@
       const repData = allRepsData[parseInt(card.dataset.repIdx)];
       if (repData) {
         sessionStorage.setItem('civitas_selected_official', JSON.stringify(repData));
-        window.location.href = '/representative.html';
+        const bioguideId = repData.official?.bioguideId;
+        window.location.href = bioguideId
+          ? `/representative.html?bioguide=${encodeURIComponent(bioguideId)}`
+          : '/representative.html';
       }
     });
+
+    // Deep link support: /?address=... auto-runs a search (also backs the
+    // WebSite SearchAction schema so Google can offer a sitelinks search box).
+    (function initFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const address = params.get('address');
+      if (address) {
+        searchInput.value = address;
+        lookupReps(address);
+      }
+    })();
   </script>
 
   <script>

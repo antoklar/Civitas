@@ -350,6 +350,7 @@ module.exports = async (req, res) => {
         state:             m.state || listState,
         birthYear:         m.birthYear || null,
         chamber:           latestTerm.memberType || '',
+        district:          latestTerm.district !== undefined ? latestTerm.district : null,
         termStart:         latestTerm.startYear || '',
         termEnd:           latestTerm.endYear   || '',
         photoUrl,

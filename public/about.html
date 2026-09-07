@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Civitas — Know Your Government</title>
+  <meta name="description" content="Civitas is a free, nonpartisan tool that helps you find and understand every elected official who represents you, built entirely on public government data." />
+  <link rel="canonical" href="https://civitasus.com/about.html" />
+
+  <meta property="og:site_name" content="Civitas" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="About Civitas" />
+  <meta property="og:description" content="A free, nonpartisan tool that helps you find and understand every elected official who represents you, built entirely on public government data." />
+  <meta property="og:url" content="https://civitasus.com/about.html" />
+  <meta property="og:image" content="https://civitasus.com/icons/icon-512.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="About Civitas" />
+  <meta name="twitter:description" content="A free, nonpartisan tool that helps you find and understand every elected official who represents you, built entirely on public government data." />
+  <meta name="twitter:image" content="https://civitasus.com/icons/icon-512.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About Civitas",
+    "url": "https://civitasus.com/about.html",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Civitas",
+      "url": "https://civitasus.com/"
+    },
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Civitas",
+      "url": "https://civitasus.com/",
+      "description": "A free, nonpartisan civic information platform that helps people find and understand their elected representatives at every level of government."
+    }
+  }
+  </script>
+
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#b5371f" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Civitas" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0f1923; --paper: #f4f1eb; --cream: #faf8f3;
+      --accent: #b5371f; --accent-light: #f5ece9; --gold: #c9973a;
+      --muted: #6e6860; --border: #ddd8ce; --card: #ffffff;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .app { max-width: 760px; margin: 0 auto; padding: 0 24px 100px; }
+
+    .topbar { padding: 24px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 44px; display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; transition: color 0.15s; }
+    .back-btn:hover { color: var(--ink); }
+    .topbar-brand { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--muted); }
+
+    .hero { padding-bottom: 40px; border-bottom: 1.5px solid var(--ink); margin-bottom: 48px; }
+    .eyebrow { font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 12px; }
+    .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: 1.05; letter-spacing: -1px; margin-bottom: 18px; }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero p { font-size: 1.02rem; color: var(--muted); line-height: 1.7; max-width: 560px; font-weight: 300; }
+
+    .section { margin-bottom: 48px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .section-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .section-line { flex: 1; height: 1px; background: var(--border); }
+    .section h2 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 14px; }
+    .section p { font-size: 0.95rem; line-height: 1.75; color: var(--ink); margin-bottom: 14px; font-weight: 300; }
+    .section p:last-child { margin-bottom: 0; }
+    .section p a { color: var(--accent); font-weight: 500; text-decoration: none; }
+    .section p a:hover { color: var(--ink); }
+
+    .steps { display: grid; gap: 14px; }
+    .step { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 22px; display: grid; grid-template-columns: 32px 1fr; gap: 16px; align-items: start; }
+    .step-num { font-family: 'DM Serif Display', serif; font-size: 1.3rem; color: var(--accent); line-height: 1; }
+    .step-body h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .step-body p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 0; font-weight: 300; }
+
+    .source-list { list-style: none; display: grid; gap: 8px; }
+    .source-list li { font-size: 0.88rem; padding: 12px 16px; border: 1px solid var(--border); border-radius: 3px; background: var(--card); display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .source-name { font-weight: 500; }
+    .source-desc { color: var(--muted); font-size: 0.8rem; }
+
+    .values { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .value-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 20px; position: relative; overflow: hidden; }
+    .value-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+    .value-card:hover::after { transform: scaleX(1); }
+    .value-card h3 { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 6px; }
+    .value-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 0; font-weight: 300; }
+
+    .cta { text-align: center; padding: 40px 0 0; }
+    .cta a { display: inline-block; background: var(--ink); color: var(--paper); text-decoration: none; padding: 14px 28px; border-radius: 3px; font-size: 0.85rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; transition: background 0.15s; }
+    .cta a:hover { background: var(--accent); }
+
+    .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+    .footer-note { font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <div class="topbar">
+      <a href="/" class="back-btn">&#8592; Back to Search</a>
+      <span class="topbar-brand">Civitas</span>
+    </div>
+
+    <div class="hero">
+      <div class="eyebrow">About Civitas</div>
+      <h1>Your government, <em>explained</em>.</h1>
+      <p>Civitas is a free, nonpartisan tool that helps you find and understand every elected official who represents you — from city hall to Capitol Hill — using only public government data.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Mission</span>
+        <span class="section-line"></span>
+      </div>
+      <p>Most people can name their president. Far fewer can name their state legislator, their county commissioner, or the member of Congress who actually votes on the bills that affect their daily lives. That gap isn't a knowledge problem — it's an access problem. Government data is public, but it's scattered across dozens of disconnected websites, PDFs, and databases.</p>
+      <p>Civitas exists to close that gap. Enter an address, and we pull together who represents you, how they vote, who funds their campaigns, and how to reach them — all in one place, in language that doesn't require a political science degree to understand.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">How It Works</span>
+        <span class="section-line"></span>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Enter your address</h3>
+            <p>We geocode it to find your exact federal, state, and local districts.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>We match you to your officials</h3>
+            <p>Every representative tied to those districts is pulled from public records — no paywalls, no guesswork.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>You see the full picture</h3>
+            <p>Voting record, committee assignments, sponsored legislation, top campaign donors, and direct contact info, all on one profile.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">Data Sources</span>
+        <span class="section-line"></span>
+      </div>
+      <p>Civitas is built entirely on free, public data — no paid political data brokers. Every fact links back to its source so you can verify it yourself.</p>
+      <ul class="source-list">
+        <li><span class="source-name">U.S. Census Geocoder</span><span class="source-desc">Address-to-district lookup</span></li>
+        <li><span class="source-name">congress-legislators</span><span class="source-desc">Federal representative and committee data</span></li>
+        <li><span class="source-name">Congress.gov API</span><span class="source-desc">Voting records and sponsored legislation</span></li>
+        <li><span class="source-name">Federal Election Commission (FEC)</span><span class="source-desc">Campaign finance and donor data</span></li>
+        <li><span class="source-name">OpenStates</span><span class="source-desc">State legislator data</span></li>
+        <li><span class="source-name">Wikidata / Wikipedia</span><span class="source-desc">Career and education background</span></li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-label">What We Stand For</span>
+        <span class="section-line"></span>
+      </div>
+      <div class="values">
+        <div class="value-card">
+          <h3>Nonpartisan</h3>
+          <p>We show the same facts about every official, regardless of party. No spin, no endorsements.</p>
+        </div>
+        <div class="value-card">
+          <h3>Free, always</h3>
+          <p>Civic information shouldn't sit behind a paywall. Civitas is free to use, with no account required.</p>
+        </div>
+        <div class="value-card">
+          <h3>Public data only</h3>
+          <p>Everything you see comes from government and public records — never purchased or brokered data.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <a href="/">Find Your Representatives</a>
+    </div>
+
+    <footer class="footer">
+      <span class="footer-brand">Civitas</span>
+      <span class="footer-note">Information is power. So is knowing who to call.</span>
+    </footer>
+  </div>
+</body>
+</html>
