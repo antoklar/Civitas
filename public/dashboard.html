@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Civitas</title>
+  <meta name="description" content="Your Civitas dashboard — saved representatives and upcoming civic events." />
+  <link rel="canonical" href="https://www.civitasus.com/dashboard.html" />
+
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#b5371f" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Civitas" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0f1923; --paper: #f4f1eb; --cream: #faf8f3;
+      --accent: #b5371f; --accent-light: #f5ece9; --gold: #c9973a;
+      --muted: #6e6860; --border: #ddd8ce; --card: #ffffff;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .app { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+    .app.loading-state { display: none; }
+
+    .header { padding: 40px 0 40px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid var(--ink); margin-bottom: 44px; gap: 24px; flex-wrap: wrap; }
+    .brand-eyebrow { font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+    .brand-name { font-family: 'DM Serif Display', serif; font-size: clamp(2.4rem, 6vw, 3.6rem); line-height: 0.9; color: var(--ink); letter-spacing: -1.5px; }
+    .brand-name em { font-style: italic; color: var(--accent); }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .nav-link { font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; color: var(--muted); text-decoration: none; }
+    .nav-link:hover { color: var(--ink); }
+    .logout-btn { background: none; border: 1.5px solid var(--border); color: var(--ink); padding: 9px 16px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .welcome-block { margin-bottom: 52px; }
+    .welcome-title { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin-bottom: 8px; }
+    .welcome-email { font-size: 0.9rem; color: var(--muted); }
+
+    .dash-section { margin-bottom: 48px; }
+    .level-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .level-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .level-line { flex: 1; height: 1px; background: var(--border); }
+
+    .empty-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 32px 28px; position: relative; overflow: hidden; display: flex; align-items: flex-start; gap: 18px; }
+    .empty-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+    .empty-card:hover::after { transform: scaleX(1); }
+    .empty-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .empty-card h3 { font-family: 'DM Serif Display', serif; font-size: 1.05rem; margin-bottom: 6px; }
+    .empty-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; max-width: 520px; }
+    .empty-card p a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .empty-card p a:hover { color: var(--ink); }
+
+    .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+    .footer-note { font-size: 0.75rem; color: var(--muted); }
+    .footer-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .footer-note a:hover { color: var(--ink); }
+
+    @media (max-width: 600px) {
+      .header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app loading-state" id="app">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-eyebrow">Civic Intelligence Platform</div>
+        <h1 class="brand-name">Civi<em>tas</em></h1>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="nav-link">&#8592; Back to Search</a>
+        <button class="logout-btn" id="logoutBtn">Log Out</button>
+      </div>
+    </header>
+
+    <div class="welcome-block">
+      <div class="welcome-title" id="welcomeTitle">Welcome back</div>
+      <div class="welcome-email" id="userEmail"></div>
+    </div>
+
+    <section class="dash-section">
+      <div class="level-header">
+        <span class="level-label">Saved Representatives</span>
+        <span class="level-line"></span>
+      </div>
+      <div class="empty-card">
+        <div class="empty-icon">🏛️</div>
+        <div>
+          <h3>No saved representatives yet</h3>
+          <p>Search your address on the <a href="/">homepage</a> and save the reps you want to keep an eye on — they'll show up here.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="dash-section">
+      <div class="level-header">
+        <span class="level-label">Upcoming Civic Events</span>
+        <span class="level-line"></span>
+      </div>
+      <div class="empty-card">
+        <div class="empty-icon">🗓️</div>
+        <div>
+          <h3>Coming soon</h3>
+          <p>Town halls, local elections, and community meetings near you will show up here.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span class="footer-brand">Civitas</span>
+      <span class="footer-note">Information is power. So is knowing who to call. · <a href="/about.html">About Civitas</a></span>
+    </footer>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://mhcupdxtgvhmxnddshhd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_z2i0uc0CrH47APPNlyH_6g_8Kjb37vA';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const appEl = document.getElementById('app');
+
+    function renderUser(user) {
+      const name = user.email ? user.email.split('@')[0] : 'there';
+      document.getElementById('welcomeTitle').textContent = `Welcome back, ${name}`;
+      document.getElementById('userEmail').textContent = user.email || '';
+      appEl.classList.remove('loading-state');
+      appEl.style.display = 'block';
+    }
+
+    (async function init() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = '/auth.html'; return; }
+      renderUser(session.user);
+    })();
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) window.location.href = '/auth.html';
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = '/auth.html';
+    });
+  </script>
+</body>
+</html>
