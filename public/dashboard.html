@@ -76,26 +76,47 @@
     .address-card.primary::after { background: linear-gradient(90deg, var(--accent), var(--gold)); }
     .address-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .address-label { font-family: 'DM Serif Display', serif; font-size: 1rem; }
+    .address-card-badges { display: flex; align-items: center; gap: 6px; }
     .primary-badge { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 2px; white-space: nowrap; }
     .address-text { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
     .address-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .mini-btn { background: none; border: 1.5px solid var(--border); color: var(--ink); padding: 6px 12px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
     .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
     .mini-btn.danger:hover { border-color: var(--rep); color: var(--rep); }
+    .icon-btn { background: none; border: none; padding: 4px; border-radius: 3px; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color 0.15s, background 0.15s; }
+    .icon-btn:hover { color: var(--accent); background: var(--accent-light); }
+    .icon-btn svg { width: 14px; height: 14px; }
 
     .address-form { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 20px; margin-top: 18px; }
     .address-form[hidden] { display: none; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .address-form .field { flex: 1; min-width: 180px; }
     .field label { font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--muted); }
-    .field input { padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input { padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
     .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .addr-input-wrapper { position: relative; }
     .address-form-actions { display: flex; gap: 10px; }
     .submit-btn { background: var(--ink); color: var(--paper); border: none; border-radius: 3px; padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
     .submit-btn:hover { background: var(--accent); }
     .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .cancel-btn { background: none; border: 1.5px solid var(--border); color: var(--muted); padding: 12px 18px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
     .cancel-btn:hover { border-color: var(--ink); color: var(--ink); }
+    .form-msg { display: none; flex-basis: 100%; font-size: 0.82rem; line-height: 1.55; padding: 12px 14px; border-radius: 3px; border-left: 3px solid var(--accent); background: var(--accent-light); color: #6b1a0a; }
+    .form-msg.visible { display: block; }
+
+    /* Address autocomplete (mirrors homepage search) */
+    .autocomplete-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--card); border: 2px solid var(--ink); border-radius: 3px; box-shadow: 4px 4px 0 rgba(15,25,35,0.15); z-index: 200; overflow: hidden; display: none; }
+    .autocomplete-dropdown.visible { display: block; }
+    .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid var(--border); transition: background 0.1s; display: flex; align-items: flex-start; gap: 10px; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover, .autocomplete-item.active { background: var(--accent-light); }
+    .ac-icon { color: var(--accent); flex-shrink: 0; }
+    .ac-main { font-weight: 500; color: var(--ink); }
+    .ac-secondary { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+    .ac-loading { padding: 13px 16px; font-size: 0.8rem; color: var(--muted); font-style: italic; display: flex; align-items: center; gap: 10px; }
+    .ac-spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; flex-shrink: 0; }
+    .spinner { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Rep cards (mirrors homepage results styling) */
     .rep-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 22px 24px; margin-bottom: 10px; display: grid; grid-template-columns: 52px 1fr auto; gap: 18px; align-items: start; transition: box-shadow 0.18s, transform 0.15s; position: relative; overflow: hidden; cursor: pointer; }
@@ -159,13 +180,17 @@
       </div>
       <div class="address-grid" id="addressGrid"></div>
       <form class="address-form" id="addressForm" hidden>
+        <div class="form-msg" id="addressFormMsg"></div>
         <div class="field">
           <label for="addrLabel">Label</label>
           <input type="text" id="addrLabel" required placeholder="e.g. Home, Work, Rental Property" />
         </div>
         <div class="field">
           <label for="addrValue">Address</label>
-          <input type="text" id="addrValue" required placeholder="123 Main St, Springfield IL 62701" />
+          <div class="addr-input-wrapper" id="addrFieldWrapper">
+            <input type="text" id="addrValue" required placeholder="123 Main St, Springfield IL 62701" autocomplete="off" spellcheck="false" />
+            <div class="autocomplete-dropdown" id="addrDropdown"></div>
+          </div>
         </div>
         <div class="address-form-actions">
           <button type="submit" class="submit-btn">Save Address</button>
@@ -239,8 +264,51 @@
     // ── Addresses ──────────────────────────────────────────────────────────
     const addressGrid = document.getElementById('addressGrid');
     const addressForm = document.getElementById('addressForm');
+    const addressFormMsg = document.getElementById('addressFormMsg');
+    const addrLabelInput = document.getElementById('addrLabel');
+    const addrValueInput = document.getElementById('addrValue');
     const addAddressBtn = document.getElementById('addAddressBtn');
     const cancelAddressBtn = document.getElementById('cancelAddressBtn');
+    const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+
+    let editingId = null;
+
+    function showFormMsg(text) {
+      addressFormMsg.textContent = text;
+      addressFormMsg.classList.add('visible');
+    }
+    function clearFormMsg() {
+      addressFormMsg.textContent = '';
+      addressFormMsg.classList.remove('visible');
+    }
+
+    function openAddForm() {
+      editingId = null;
+      addressForm.reset();
+      clearFormMsg();
+      addressForm.querySelector('.submit-btn').textContent = 'Save Address';
+      addressForm.hidden = false;
+      addrLabelInput.focus();
+    }
+
+    function openEditForm(id) {
+      const addr = addresses.find(a => a.id === id);
+      if (!addr) return;
+      editingId = id;
+      clearFormMsg();
+      addrLabelInput.value = addr.label;
+      addrValueInput.value = addr.address;
+      addressForm.querySelector('.submit-btn').textContent = 'Update Address';
+      addressForm.hidden = false;
+      addrLabelInput.focus();
+    }
+
+    function closeAddressForm() {
+      editingId = null;
+      addressForm.reset();
+      clearFormMsg();
+      addressForm.hidden = true;
+    }
 
     function renderAddresses() {
       if (!addresses.length) {
@@ -251,7 +319,10 @@
         <div class="address-card${a.is_primary ? ' primary' : ''}">
           <div class="address-card-top">
             <span class="address-label">${a.label}</span>
-            ${a.is_primary ? '<span class="primary-badge">Primary</span>' : ''}
+            <div class="address-card-badges">
+              ${a.is_primary ? '<span class="primary-badge">Primary</span>' : ''}
+              <button class="icon-btn" type="button" data-action="edit" data-id="${a.id}" title="Edit address" aria-label="Edit address">${EDIT_ICON}</button>
+            </div>
           </div>
           <div class="address-text">${a.address}</div>
           <div class="address-actions">
@@ -297,38 +368,117 @@
       }
     }
 
-    addAddressBtn.addEventListener('click', () => { addressForm.hidden = !addressForm.hidden; });
-    cancelAddressBtn.addEventListener('click', () => { addressForm.reset(); addressForm.hidden = true; });
+    addAddressBtn.addEventListener('click', () => {
+      if (!addressForm.hidden && editingId === null) closeAddressForm();
+      else openAddForm();
+    });
+    cancelAddressBtn.addEventListener('click', () => { closeAddressForm(); });
 
     addressForm.addEventListener('submit', async e => {
       e.preventDefault();
-      const label = document.getElementById('addrLabel').value.trim();
-      const address = document.getElementById('addrValue').value.trim();
+      clearFormMsg();
+      const label = addrLabelInput.value.trim();
+      const address = addrValueInput.value.trim();
       if (!label || !address) return;
+
+      const duplicate = addresses.find(a => a.label.trim().toLowerCase() === label.toLowerCase() && a.id !== editingId);
+      if (duplicate) {
+        showFormMsg(`You already have an address labeled ${duplicate.label}. Choose a different label or edit the existing one.`);
+        return;
+      }
+
       const btn = addressForm.querySelector('.submit-btn');
-      btn.disabled = true; btn.textContent = 'Saving...';
-      const { error } = await sb.from('profiles').insert({
-        user_id: currentUser.id, label, address, is_primary: addresses.length === 0
-      });
-      btn.disabled = false; btn.textContent = 'Save Address';
-      if (error) { alert(error.message); return; }
-      addressForm.reset();
-      addressForm.hidden = true;
+      btn.disabled = true; btn.textContent = editingId ? 'Updating...' : 'Saving...';
+
+      const { error } = editingId
+        ? await sb.from('profiles').update({ label, address }).eq('id', editingId)
+        : await sb.from('profiles').insert({ user_id: currentUser.id, label, address, is_primary: addresses.length === 0 });
+
+      btn.disabled = false; btn.textContent = editingId ? 'Update Address' : 'Save Address';
+      if (error) { showFormMsg(error.message); return; }
+      closeAddressForm();
       await loadAddresses();
     });
 
     addressGrid.addEventListener('click', async e => {
-      const btn = e.target.closest('.mini-btn');
+      const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const id = btn.dataset.id;
+      if (btn.dataset.action === 'edit') { openEditForm(id); return; }
       btn.disabled = true;
       if (btn.dataset.action === 'primary') {
         await sb.from('profiles').update({ is_primary: false }).eq('user_id', currentUser.id);
         await sb.from('profiles').update({ is_primary: true }).eq('id', id);
       } else if (btn.dataset.action === 'remove') {
+        if (editingId === id) closeAddressForm();
         await sb.from('profiles').delete().eq('id', id);
       }
       await loadAddresses();
+    });
+
+    // ── Address autocomplete (mirrors homepage search) ──────────────────────
+    const addrFieldWrapper = document.getElementById('addrFieldWrapper');
+    const addrDropdown = document.getElementById('addrDropdown');
+    let addrSuggestions = [];
+    let addrActiveIdx = -1;
+    let addrDebounceTimer = null;
+
+    function renderAddrDropdown() {
+      if (addrSuggestions.length === 0) { addrDropdown.classList.remove('visible'); return; }
+      addrDropdown.innerHTML = addrSuggestions.map((s, i) => `
+        <div class="autocomplete-item${i === addrActiveIdx ? ' active' : ''}" data-idx="${i}">
+          <span class="ac-icon">📍</span>
+          <div>
+            <div class="ac-main">${s.main}</div>
+            ${s.secondary ? `<div class="ac-secondary">${s.secondary}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+      addrDropdown.classList.add('visible');
+      addrDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('mousedown', e => {
+          e.preventDefault();
+          selectAddrSuggestion(addrSuggestions[parseInt(item.dataset.idx)]);
+        });
+      });
+    }
+
+    function selectAddrSuggestion(s) {
+      addrValueInput.value = s.full || `${s.main}, ${s.secondary}`;
+      addrSuggestions = [];
+      addrDropdown.classList.remove('visible');
+    }
+
+    async function fetchAddrSuggestions(val) {
+      if (val.trim().length < 4) { addrSuggestions = []; renderAddrDropdown(); return; }
+      addrDropdown.innerHTML = '<div class="ac-loading"><div class="ac-spinner"></div>Finding addresses...</div>';
+      addrDropdown.classList.add('visible');
+      try {
+        const res = await fetch(`/api/autocomplete?input=${encodeURIComponent(val)}`);
+        const data = await res.json();
+        addrSuggestions = data.suggestions || [];
+        addrActiveIdx = -1;
+        renderAddrDropdown();
+      } catch { addrSuggestions = []; addrDropdown.classList.remove('visible'); }
+    }
+
+    addrValueInput.addEventListener('input', e => {
+      clearTimeout(addrDebounceTimer);
+      addrDebounceTimer = setTimeout(() => fetchAddrSuggestions(e.target.value), 300);
+    });
+
+    addrValueInput.addEventListener('keydown', e => {
+      if (addrSuggestions.length === 0) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); addrActiveIdx = Math.min(addrActiveIdx + 1, addrSuggestions.length - 1); renderAddrDropdown(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); addrActiveIdx = Math.max(addrActiveIdx - 1, -1); renderAddrDropdown(); }
+      else if (e.key === 'Enter' && addrActiveIdx >= 0) { e.preventDefault(); selectAddrSuggestion(addrSuggestions[addrActiveIdx]); }
+      else if (e.key === 'Escape') { addrSuggestions = []; addrDropdown.classList.remove('visible'); }
+    });
+
+    document.addEventListener('click', e => {
+      if (!addrFieldWrapper.contains(e.target)) {
+        addrDropdown.classList.remove('visible');
+      }
     });
 
     // ── Representatives ───────────────────────────────────────────────────
@@ -338,6 +488,10 @@
     function showRepsStatus(icon, title, text) {
       repsStatus.style.display = 'flex';
       repsStatus.innerHTML = `<div class="empty-icon">${icon}</div><div><h3>${title}</h3><p>${text}</p></div>`;
+    }
+    function showRepsLoading(text) {
+      repsStatus.style.display = 'flex';
+      repsStatus.innerHTML = `<div class="spinner"></div><div><h3>Looking up your representatives</h3><p>${text}</p></div>`;
     }
     function hideRepsStatus() {
       repsStatus.style.display = 'none';
@@ -405,13 +559,33 @@
       }).join('');
     }
 
+    async function fetchRepsOnce(address) {
+      const res = await fetch(`/api/representatives?address=${encodeURIComponent(address)}`);
+      let data = null;
+      try { data = await res.json(); } catch { /* non-JSON error body */ }
+      return { res, data };
+    }
+
+    // The Census geocoder that /api/representatives relies on is known to be
+    // transiently flaky (occasional 502s). Retry once, directly, before
+    // surfacing an error to the user.
+    async function fetchRepsWithFallback(address) {
+      let { res, data } = await fetchRepsOnce(address);
+      const isCensusHiccup = res.status === 502 || res.status === 504 || (!res.ok && /census/i.test(data?.error || ''));
+      if (isCensusHiccup) {
+        ({ res, data } = await fetchRepsOnce(address));
+      }
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || `Lookup failed (${res.status})`);
+      }
+      return data;
+    }
+
     async function loadRepsForAddress(address) {
       repsContainer.innerHTML = '';
-      showRepsStatus('⏳', 'Looking up your representatives', 'Pulling from public government records for ' + address + '.');
+      showRepsLoading(`Pulling from public government records for ${address}.`);
       try {
-        const res = await fetch(`/api/representatives?address=${encodeURIComponent(address)}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        const data = await fetchRepsWithFallback(address);
         renderRepsData(data);
       } catch (err) {
         showRepsStatus('⚠️', 'Couldn\'t look up representatives', err.message || 'Please check this address under My Addresses and try again.');
@@ -438,7 +612,12 @@
       if (!session) { window.location.href = '/auth.html'; return; }
       currentUser = session.user;
       renderUser(currentUser);
-      await loadAddresses();
+      try {
+        await loadAddresses();
+      } catch (err) {
+        console.error(err);
+        showRepsStatus('⚠️', 'Couldn\'t look up representatives', 'Something went wrong loading your dashboard data. Try refreshing the page.');
+      }
     })();
 
     sb.auth.onAuthStateChange((event, session) => {
