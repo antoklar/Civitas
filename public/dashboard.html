@@ -70,10 +70,13 @@
     .address-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
     .address-grid + .address-form { margin-top: 18px; }
     .no-address-note { font-size: 0.85rem; color: var(--muted); }
-    .address-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .address-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; overflow: hidden; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
     .address-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--border); }
-    .address-card.primary { border-color: var(--accent); }
     .address-card.primary::after { background: linear-gradient(90deg, var(--accent), var(--gold)); }
+    .address-card:hover { border-color: var(--accent); box-shadow: 3px 3px 0 rgba(15,25,35,0.08); transform: translate(-1px, -1px); }
+    .address-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .address-card.active { border: 2px solid var(--accent); box-shadow: 0 0 0 3px var(--accent-light); padding: 17px 19px; }
+    .address-card.active:hover { transform: none; }
     .address-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
     .address-label { font-family: 'DM Serif Display', serif; font-size: 1rem; }
     .address-card-badges { display: flex; align-items: center; gap: 6px; }
@@ -272,6 +275,7 @@
     const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 
     let editingId = null;
+    let viewingId = null;
 
     function showFormMsg(text) {
       addressFormMsg.textContent = text;
@@ -316,7 +320,7 @@
         return;
       }
       addressGrid.innerHTML = addresses.map(a => `
-        <div class="address-card${a.is_primary ? ' primary' : ''}">
+        <div class="address-card${a.is_primary ? ' primary' : ''}${a.id === viewingId ? ' active' : ''}" data-id="${a.id}" role="button" tabindex="0" aria-pressed="${a.id === viewingId}">
           <div class="address-card-top">
             <span class="address-label">${a.label}</span>
             <div class="address-card-badges">
@@ -357,15 +361,25 @@
       }
 
       addresses = list;
+      const primary = addresses.find(a => a.is_primary) || addresses[0];
+      viewingId = primary ? primary.id : null;
       renderAddresses();
 
-      const primary = addresses.find(a => a.is_primary) || addresses[0];
       if (primary) {
         loadRepsForAddress(primary.address);
       } else {
         document.getElementById('repsContainer').innerHTML = '';
         showRepsStatus('🏛️', 'No address on file', 'Add an address above to automatically see your representatives.');
       }
+    }
+
+    function selectAddressCard(id) {
+      if (id === viewingId) return;
+      const addr = addresses.find(a => a.id === id);
+      if (!addr) return;
+      viewingId = id;
+      renderAddresses();
+      loadRepsForAddress(addr.address);
     }
 
     addAddressBtn.addEventListener('click', () => {
@@ -402,18 +416,32 @@
 
     addressGrid.addEventListener('click', async e => {
       const btn = e.target.closest('[data-action]');
-      if (!btn) return;
-      const id = btn.dataset.id;
-      if (btn.dataset.action === 'edit') { openEditForm(id); return; }
-      btn.disabled = true;
-      if (btn.dataset.action === 'primary') {
-        await sb.from('profiles').update({ is_primary: false }).eq('user_id', currentUser.id);
-        await sb.from('profiles').update({ is_primary: true }).eq('id', id);
-      } else if (btn.dataset.action === 'remove') {
-        if (editingId === id) closeAddressForm();
-        await sb.from('profiles').delete().eq('id', id);
+      if (btn) {
+        const id = btn.dataset.id;
+        if (btn.dataset.action === 'edit') { openEditForm(id); return; }
+        btn.disabled = true;
+        if (btn.dataset.action === 'primary') {
+          await sb.from('profiles').update({ is_primary: false }).eq('user_id', currentUser.id);
+          await sb.from('profiles').update({ is_primary: true }).eq('id', id);
+        } else if (btn.dataset.action === 'remove') {
+          if (editingId === id) closeAddressForm();
+          await sb.from('profiles').delete().eq('id', id);
+        }
+        await loadAddresses();
+        return;
       }
-      await loadAddresses();
+
+      const card = e.target.closest('.address-card[data-id]');
+      if (card) selectAddressCard(card.dataset.id);
+    });
+
+    addressGrid.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      if (e.target.closest('[data-action]')) return;
+      const card = e.target.closest('.address-card[data-id]');
+      if (!card) return;
+      e.preventDefault();
+      selectAddressCard(card.dataset.id);
     });
 
     // ── Address autocomplete (mirrors homepage search) ──────────────────────
