@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — Civitas</title>
-  <meta name="description" content="Your Civitas dashboard — saved representatives and upcoming civic events." />
+  <meta name="description" content="Your Civitas dashboard — saved addresses, your representatives, and upcoming civic events." />
   <link rel="canonical" href="https://www.civitasus.com/dashboard.html" />
 
   <link rel="manifest" href="/manifest.json" />
@@ -25,6 +25,9 @@
       --ink: #0f1923; --paper: #f4f1eb; --cream: #faf8f3;
       --accent: #b5371f; --accent-light: #f5ece9; --gold: #c9973a;
       --muted: #6e6860; --border: #ddd8ce; --card: #ffffff;
+      --dem: #1a3f8f; --dem-bg: #edf2ff;
+      --rep: #8f1a1a; --rep-bg: #fff0f0;
+      --ind: #1a6b3a; --ind-bg: #edfff4;
     }
     body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
     .app { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
@@ -48,6 +51,9 @@
     .level-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .level-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
     .level-line { flex: 1; height: 1px; background: var(--border); }
+    .level-count { font-size: 0.7rem; color: var(--border); font-weight: 500; }
+    .level-group { margin-bottom: 32px; }
+    .level-group:last-child { margin-bottom: 0; }
 
     .empty-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 32px 28px; position: relative; overflow: hidden; display: flex; align-items: flex-start; gap: 18px; }
     .empty-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
@@ -58,6 +64,62 @@
     .empty-card p a { color: var(--accent); text-decoration: none; font-weight: 500; }
     .empty-card p a:hover { color: var(--ink); }
 
+    /* Addresses */
+    .add-address-btn { background: none; border: none; color: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; white-space: nowrap; padding: 0; }
+    .add-address-btn:hover { color: var(--ink); }
+    .address-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .address-grid + .address-form { margin-top: 18px; }
+    .no-address-note { font-size: 0.85rem; color: var(--muted); }
+    .address-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; position: relative; overflow: hidden; }
+    .address-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--border); }
+    .address-card.primary { border-color: var(--accent); }
+    .address-card.primary::after { background: linear-gradient(90deg, var(--accent), var(--gold)); }
+    .address-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .address-label { font-family: 'DM Serif Display', serif; font-size: 1rem; }
+    .primary-badge { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--accent); background: var(--accent-light); padding: 3px 8px; border-radius: 2px; white-space: nowrap; }
+    .address-text { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .address-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .mini-btn { background: none; border: 1.5px solid var(--border); color: var(--ink); padding: 6px 12px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mini-btn.danger:hover { border-color: var(--rep); color: var(--rep); }
+
+    .address-form { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 20px; margin-top: 18px; }
+    .address-form[hidden] { display: none; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .address-form .field { flex: 1; min-width: 180px; }
+    .field label { font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+    .field input { padding: 12px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .address-form-actions { display: flex; gap: 10px; }
+    .submit-btn { background: var(--ink); color: var(--paper); border: none; border-radius: 3px; padding: 12px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
+    .submit-btn:hover { background: var(--accent); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .cancel-btn { background: none; border: 1.5px solid var(--border); color: var(--muted); padding: 12px 18px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .cancel-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* Rep cards (mirrors homepage results styling) */
+    .rep-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 22px 24px; margin-bottom: 10px; display: grid; grid-template-columns: 52px 1fr auto; gap: 18px; align-items: start; transition: box-shadow 0.18s, transform 0.15s; position: relative; overflow: hidden; cursor: pointer; }
+    .rep-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
+    .rep-card.party-dem::before { background: var(--dem); }
+    .rep-card.party-rep::before { background: var(--rep); }
+    .rep-card.party-ind::before { background: var(--ind); }
+    .rep-card:hover { box-shadow: 3px 3px 0 rgba(15,25,35,0.1); transform: translate(-1px, -1px); }
+    .rep-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.1rem; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); }
+    .rep-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .rep-name { font-family: 'DM Serif Display', serif; font-size: 1.05rem; line-height: 1.2; margin-bottom: 3px; }
+    .rep-office { font-size: 0.82rem; color: var(--muted); margin-bottom: 10px; }
+    .rep-party-badge { display: inline-block; font-size: 0.67rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; padding: 3px 10px; border-radius: 2px; margin-bottom: 10px; }
+    .party-dem .rep-party-badge { background: var(--dem-bg); color: var(--dem); }
+    .party-rep .rep-party-badge { background: var(--rep-bg); color: var(--rep); }
+    .party-ind .rep-party-badge { background: var(--ind-bg); color: var(--ind); }
+    .party-other .rep-party-badge { background: #f5f0e8; color: var(--gold); }
+    .rep-links { display: flex; flex-wrap: wrap; gap: 10px; }
+    .rep-link { font-size: 0.78rem; color: var(--accent); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+    .rep-link:hover { color: var(--ink); }
+    .rep-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .soon-tag { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--border); font-weight: 600; border: 1px solid var(--border); padding: 2px 7px; border-radius: 2px; white-space: nowrap; transition: color 0.2s, border-color 0.2s; }
+    .rep-card:hover .soon-tag { color: var(--gold); border-color: var(--gold); }
+
     .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
     .footer-note { font-size: 0.75rem; color: var(--muted); }
@@ -66,6 +128,8 @@
 
     @media (max-width: 600px) {
       .header { flex-direction: column; align-items: flex-start; }
+      .rep-card { grid-template-columns: 44px 1fr; }
+      .rep-side { display: none; }
     }
   </style>
 </head>
@@ -89,16 +153,34 @@
 
     <section class="dash-section">
       <div class="level-header">
-        <span class="level-label">Saved Representatives</span>
+        <span class="level-label">My Addresses</span>
+        <span class="level-line"></span>
+        <button class="add-address-btn" id="addAddressBtn" type="button">+ Add Address</button>
+      </div>
+      <div class="address-grid" id="addressGrid"></div>
+      <form class="address-form" id="addressForm" hidden>
+        <div class="field">
+          <label for="addrLabel">Label</label>
+          <input type="text" id="addrLabel" required placeholder="e.g. Home, Work, Rental Property" />
+        </div>
+        <div class="field">
+          <label for="addrValue">Address</label>
+          <input type="text" id="addrValue" required placeholder="123 Main St, Springfield IL 62701" />
+        </div>
+        <div class="address-form-actions">
+          <button type="submit" class="submit-btn">Save Address</button>
+          <button type="button" class="cancel-btn" id="cancelAddressBtn">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="dash-section">
+      <div class="level-header">
+        <span class="level-label">Your Representatives</span>
         <span class="level-line"></span>
       </div>
-      <div class="empty-card">
-        <div class="empty-icon">🏛️</div>
-        <div>
-          <h3>No saved representatives yet</h3>
-          <p>Search your address on the <a href="/">homepage</a> and save the reps you want to keep an eye on — they'll show up here.</p>
-        </div>
-      </div>
+      <div class="empty-card" id="repsStatus" style="display:none;"></div>
+      <div id="repsContainer"></div>
     </section>
 
     <section class="dash-section">
@@ -127,18 +209,230 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const appEl = document.getElementById('app');
 
+    const LEVEL_MAP = { country:'National', administrativeArea1:'State', administrativeArea2:'Local', locality:'Local', subLocality1:'Local', subLocality2:'Local', special:'Local' };
+    const LEVEL_ORDER = ['National','State','Local'];
+
+    let currentUser = null;
+    let addresses = [];
+    let allRepsData = [];
+
+    function getPartyClass(party='') {
+      if (/democrat/i.test(party)) return 'party-dem';
+      if (/republican/i.test(party)) return 'party-rep';
+      if (/independent|nonpartisan/i.test(party)) return 'party-ind';
+      return 'party-other';
+    }
+
+    function getInitials(name='') {
+      return name.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    }
+
     function renderUser(user) {
-      const name = user.email ? user.email.split('@')[0] : 'there';
-      document.getElementById('welcomeTitle').textContent = `Welcome back, ${name}`;
+      const firstName = user.user_metadata?.first_name;
+      const displayName = firstName || (user.email ? user.email.split('@')[0] : 'there');
+      document.getElementById('welcomeTitle').textContent = `Welcome back, ${displayName}`;
       document.getElementById('userEmail').textContent = user.email || '';
       appEl.classList.remove('loading-state');
       appEl.style.display = 'block';
     }
 
+    // ── Addresses ──────────────────────────────────────────────────────────
+    const addressGrid = document.getElementById('addressGrid');
+    const addressForm = document.getElementById('addressForm');
+    const addAddressBtn = document.getElementById('addAddressBtn');
+    const cancelAddressBtn = document.getElementById('cancelAddressBtn');
+
+    function renderAddresses() {
+      if (!addresses.length) {
+        addressGrid.innerHTML = '<p class="no-address-note">No saved addresses yet — add one to see your representatives.</p>';
+        return;
+      }
+      addressGrid.innerHTML = addresses.map(a => `
+        <div class="address-card${a.is_primary ? ' primary' : ''}">
+          <div class="address-card-top">
+            <span class="address-label">${a.label}</span>
+            ${a.is_primary ? '<span class="primary-badge">Primary</span>' : ''}
+          </div>
+          <div class="address-text">${a.address}</div>
+          <div class="address-actions">
+            ${!a.is_primary ? `<button class="mini-btn" data-action="primary" data-id="${a.id}">Set as Primary</button>` : ''}
+            <button class="mini-btn danger" data-action="remove" data-id="${a.id}">Remove</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadAddresses() {
+      const { data, error } = await sb.from('profiles').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
+      if (error) { console.error(error); return; }
+      let list = data || [];
+
+      if (list.length === 0 && currentUser.user_metadata?.address) {
+        const { data: seeded } = await sb.from('profiles').insert({
+          user_id: currentUser.id, label: 'Home', address: currentUser.user_metadata.address, is_primary: true
+        }).select();
+        if (seeded) list = seeded;
+      }
+
+      if (list.length > 0 && !list.some(a => a.is_primary)) {
+        await sb.from('profiles').update({ is_primary: true }).eq('id', list[0].id);
+        list[0].is_primary = true;
+      }
+
+      addresses = list;
+      renderAddresses();
+
+      const primary = addresses.find(a => a.is_primary) || addresses[0];
+      if (primary) {
+        loadRepsForAddress(primary.address);
+      } else {
+        document.getElementById('repsContainer').innerHTML = '';
+        showRepsStatus('🏛️', 'No address on file', 'Add an address above to automatically see your representatives.');
+      }
+    }
+
+    addAddressBtn.addEventListener('click', () => { addressForm.hidden = !addressForm.hidden; });
+    cancelAddressBtn.addEventListener('click', () => { addressForm.reset(); addressForm.hidden = true; });
+
+    addressForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const label = document.getElementById('addrLabel').value.trim();
+      const address = document.getElementById('addrValue').value.trim();
+      if (!label || !address) return;
+      const btn = addressForm.querySelector('.submit-btn');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      const { error } = await sb.from('profiles').insert({
+        user_id: currentUser.id, label, address, is_primary: addresses.length === 0
+      });
+      btn.disabled = false; btn.textContent = 'Save Address';
+      if (error) { alert(error.message); return; }
+      addressForm.reset();
+      addressForm.hidden = true;
+      await loadAddresses();
+    });
+
+    addressGrid.addEventListener('click', async e => {
+      const btn = e.target.closest('.mini-btn');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      btn.disabled = true;
+      if (btn.dataset.action === 'primary') {
+        await sb.from('profiles').update({ is_primary: false }).eq('user_id', currentUser.id);
+        await sb.from('profiles').update({ is_primary: true }).eq('id', id);
+      } else if (btn.dataset.action === 'remove') {
+        await sb.from('profiles').delete().eq('id', id);
+      }
+      await loadAddresses();
+    });
+
+    // ── Representatives ───────────────────────────────────────────────────
+    const repsContainer = document.getElementById('repsContainer');
+    const repsStatus = document.getElementById('repsStatus');
+
+    function showRepsStatus(icon, title, text) {
+      repsStatus.style.display = 'flex';
+      repsStatus.innerHTML = `<div class="empty-icon">${icon}</div><div><h3>${title}</h3><p>${text}</p></div>`;
+    }
+    function hideRepsStatus() {
+      repsStatus.style.display = 'none';
+    }
+
+    function renderRepsData(data) {
+      const grouped = {};
+      (data.offices || []).forEach(office => {
+        const level = LEVEL_MAP[office.levels?.[0]] || 'Local';
+        if (!grouped[level]) grouped[level] = [];
+        (office.officialIndices || []).forEach(idx => {
+          const official = data.officials?.[idx];
+          if (official) grouped[level].push({ official, office: { name: office.name } });
+        });
+      });
+
+      if (Object.keys(grouped).length === 0) {
+        repsContainer.innerHTML = '';
+        showRepsStatus('🏛️', 'No representatives found', 'We couldn\'t find representatives for that address. Double-check it under My Addresses.');
+        return;
+      }
+
+      hideRepsStatus();
+      allRepsData = [];
+      repsContainer.innerHTML = LEVEL_ORDER.map(level => {
+        const officials = grouped[level];
+        if (!officials?.length) return '';
+        return `
+          <div class="level-group">
+            <div class="level-header">
+              <span class="level-label">${level}</span>
+              <span class="level-line"></span>
+              <span class="level-count">${officials.length} rep${officials.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${officials.map(({ official, office }) => {
+              const repIdx = allRepsData.length;
+              allRepsData.push({ official, office });
+              const partyClass = getPartyClass(official.party);
+              const phone = official.phones?.[0] || '';
+              const url = official.urls?.[0] || '';
+              return `
+                <div class="rep-card ${partyClass}" data-rep-idx="${repIdx}">
+                  <div class="rep-avatar">
+                    ${official.photoUrl
+                      ? `<img src="${official.photoUrl}" alt="${official.name}" onerror="this.style.display='none'">`
+                      : getInitials(official.name)}
+                  </div>
+                  <div>
+                    <div class="rep-name">${official.name}</div>
+                    <div class="rep-office">${office.name}</div>
+                    <span class="rep-party-badge">${official.party || 'Unknown Party'}</span>
+                    <div class="rep-links">
+                      ${phone ? `<a href="tel:${phone}" class="rep-link">📞 ${phone}</a>` : ''}
+                      ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="rep-link">🔗 Official Site</a>` : ''}
+                    </div>
+                  </div>
+                  <div class="rep-side">
+                    <span class="soon-tag">View Profile</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadRepsForAddress(address) {
+      repsContainer.innerHTML = '';
+      showRepsStatus('⏳', 'Looking up your representatives', 'Pulling from public government records for ' + address + '.');
+      try {
+        const res = await fetch(`/api/representatives?address=${encodeURIComponent(address)}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        renderRepsData(data);
+      } catch (err) {
+        showRepsStatus('⚠️', 'Couldn\'t look up representatives', err.message || 'Please check this address under My Addresses and try again.');
+      }
+    }
+
+    repsContainer.addEventListener('click', e => {
+      if (e.target.closest('a')) return;
+      const card = e.target.closest('.rep-card[data-rep-idx]');
+      if (!card) return;
+      const repData = allRepsData[parseInt(card.dataset.repIdx)];
+      if (repData) {
+        sessionStorage.setItem('civitas_selected_official', JSON.stringify(repData));
+        const bioguideId = repData.official?.bioguideId;
+        window.location.href = bioguideId
+          ? `/representative.html?bioguide=${encodeURIComponent(bioguideId)}`
+          : '/representative.html';
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────
     (async function init() {
       const { data: { session } } = await sb.auth.getSession();
       if (!session) { window.location.href = '/auth.html'; return; }
-      renderUser(session.user);
+      currentUser = session.user;
+      renderUser(currentUser);
+      await loadAddresses();
     })();
 
     sb.auth.onAuthStateChange((event, session) => {

@@ -53,6 +53,7 @@
     .msg.success { background: #edfff4; border-left-color: #1a6b3a; color: #124a28; }
 
     .auth-form { display: flex; flex-direction: column; gap: 18px; }
+    .auth-form[hidden] { display: none; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label { font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; color: var(--muted); }
     .field input { padding: 13px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
@@ -70,6 +71,7 @@
     .google-btn:hover { box-shadow: 3px 3px 0 rgba(15,25,35,0.1); transform: translate(-1px, -1px); }
 
     .footer-note { margin-top: 28px; text-align: center; font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+    .field-note { margin-top: -8px; font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -105,6 +107,10 @@
 
       <form class="auth-form" id="signupForm" hidden>
         <div class="field">
+          <label for="signupFirstName">First Name</label>
+          <input type="text" id="signupFirstName" required autocomplete="given-name" placeholder="Anthony" />
+        </div>
+        <div class="field">
           <label for="signupEmail">Email</label>
           <input type="email" id="signupEmail" required autocomplete="email" placeholder="you@example.com" />
         </div>
@@ -112,6 +118,11 @@
           <label for="signupPassword">Password</label>
           <input type="password" id="signupPassword" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters" />
         </div>
+        <div class="field">
+          <label for="signupAddress">Home Address</label>
+          <input type="text" id="signupAddress" required autocomplete="street-address" placeholder="123 Main St, Springfield IL 62701" />
+        </div>
+        <p class="field-note">We use this to automatically look up your representatives — you can add more addresses later.</p>
         <button type="submit" class="submit-btn">Create Account</button>
       </form>
 
@@ -187,14 +198,19 @@
     signupForm.addEventListener('submit', async e => {
       e.preventDefault();
       clearMsg();
+      const firstName = document.getElementById('signupFirstName').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
+      const address = document.getElementById('signupAddress').value.trim();
       const btn = signupForm.querySelector('.submit-btn');
       btn.disabled = true; btn.textContent = 'Creating account...';
       const { error } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + '/dashboard.html' }
+        options: {
+          emailRedirectTo: window.location.origin + '/dashboard.html',
+          data: { first_name: firstName, address }
+        }
       });
       btn.disabled = false; btn.textContent = 'Create Account';
       if (error) { showMsg(error.message, 'error'); return; }
