@@ -264,13 +264,19 @@
 
     async function loadAddresses() {
       const { data, error } = await sb.from('profiles').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: true });
-      if (error) { console.error(error); return; }
+      if (error) {
+        console.error(error);
+        addressGrid.innerHTML = `<p class="no-address-note">Couldn't load your saved addresses (${error.message}). Try refreshing the page.</p>`;
+        return;
+      }
       let list = data || [];
 
-      if (list.length === 0 && currentUser.user_metadata?.address) {
-        const { data: seeded } = await sb.from('profiles').insert({
-          user_id: currentUser.id, label: 'Home', address: currentUser.user_metadata.address, is_primary: true
+      const homeAddress = currentUser.user_metadata?.home_address;
+      if (list.length === 0 && homeAddress) {
+        const { data: seeded, error: seedError } = await sb.from('profiles').insert({
+          user_id: currentUser.id, label: 'Home', address: homeAddress, is_primary: true
         }).select();
+        if (seedError) console.error(seedError);
         if (seeded) list = seeded;
       }
 

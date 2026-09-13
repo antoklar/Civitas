@@ -209,7 +209,7 @@
         password,
         options: {
           emailRedirectTo: window.location.origin + '/dashboard.html',
-          data: { first_name: firstName, address }
+          data: { first_name: firstName, home_address: address }
         }
       });
       btn.disabled = false; btn.textContent = 'Create Account';

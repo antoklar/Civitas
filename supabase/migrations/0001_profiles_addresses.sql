@@ -24,6 +24,12 @@ create index if not exists profiles_user_id_idx on public.profiles(user_id);
 create unique index if not exists profiles_one_primary_per_user
   on public.profiles(user_id) where is_primary;
 
+-- RLS policies alone are not enough — Postgres checks table-level GRANTs
+-- before RLS, and a table created via SQL (unlike the Studio table editor)
+-- is not auto-granted to anon/authenticated. Without this, every request
+-- from the app fails with "permission denied for table profiles" (42501).
+grant select, insert, update, delete on public.profiles to authenticated;
+
 alter table public.profiles enable row level security;
 
 drop policy if exists "Users can view their own addresses" on public.profiles;
