@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ballot Decoder — Civitas</title>
+  <meta name="description" content="Look up any federal bill — official text, a plain-English translation, where it stands in Congress, how each side argues about it, who's funding the push, and how to contact your reps about it." />
+  <link rel="canonical" href="https://www.civitasus.com/ballot.html" />
+
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#b5371f" />
+  <link rel="icon" href="/icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Civitas" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0f1923; --paper: #f4f1eb; --cream: #faf8f3;
+      --accent: #b5371f; --accent-light: #f5ece9; --gold: #c9973a;
+      --muted: #6e6860; --border: #ddd8ce; --card: #ffffff;
+      --dem: #1a3f8f; --dem-bg: #edf2ff;
+      --rep: #8f1a1a; --rep-bg: #fff0f0;
+      --ind: #1a6b3a; --ind-bg: #edfff4;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .app { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+
+    .topbar { padding: 24px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 44px; display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; transition: color 0.15s; }
+    .back-btn:hover { color: var(--ink); }
+    .topbar-brand { font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--muted); }
+
+    .header { padding-bottom: 44px; }
+    .brand-eyebrow { font-size: 0.68rem; letter-spacing: 4px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+    .brand-name { font-family: 'DM Serif Display', serif; font-size: clamp(2.6rem, 6vw, 3.8rem); line-height: 1; color: var(--ink); letter-spacing: -1.5px; margin-bottom: 14px; }
+    .brand-tagline { font-size: 0.95rem; color: var(--muted); font-weight: 300; line-height: 1.65; max-width: 560px; }
+
+    /* Search */
+    .search-block { margin: 40px 0 52px; }
+    .search-wrapper { position: relative; max-width: 620px; }
+    .search-input { width: 100%; padding: 16px 110px 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 1rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .search-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: var(--ink); color: var(--paper); border: none; border-radius: 2px; padding: 9px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
+    .search-btn:hover { background: var(--accent); }
+    .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .search-hint { margin-top: 8px; font-size: 0.78rem; color: var(--muted); font-style: italic; max-width: 620px; }
+    .search-chips { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .search-chip { font-size: 0.75rem; color: var(--accent); border: 1px solid var(--accent-light); background: var(--accent-light); padding: 5px 12px; border-radius: 20px; cursor: pointer; font-weight: 500; transition: background 0.15s, color 0.15s; }
+    .search-chip:hover { background: var(--accent); color: white; }
+
+    .results-list { display: none; margin-top: 24px; }
+    .results-list.visible { display: block; }
+    .result-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+    .result-card:hover { border-color: var(--accent); box-shadow: 3px 3px 0 rgba(15,25,35,0.08); transform: translate(-1px, -1px); }
+    .result-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .result-number { font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: var(--accent); border: 1px solid var(--accent-light); padding: 2px 9px; border-radius: 2px; white-space: nowrap; }
+    .result-date { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .result-title { font-size: 0.92rem; font-weight: 500; line-height: 1.4; margin-bottom: 6px; }
+    .result-action { font-size: 0.78rem; color: var(--muted); font-style: italic; }
+
+    /* Shared state boxes */
+    .state-box { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 32px 28px; display: flex; align-items: flex-start; gap: 18px; margin-top: 8px; }
+    .state-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .state-box h3 { font-family: 'DM Serif Display', serif; font-size: 1.05rem; margin-bottom: 6px; }
+    .state-box p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bill detail */
+    #billDetail { display: none; margin-top: 8px; }
+    #billDetail.visible { display: block; }
+    .bill-hero { padding-bottom: 32px; border-bottom: 1.5px solid var(--ink); margin-bottom: 40px; }
+    .bill-badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .bill-number-badge { font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: var(--accent); border: 1.5px solid var(--accent); padding: 4px 11px; border-radius: 2px; }
+    .policy-tag { font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; background: var(--cream); border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; border-radius: 2px; font-weight: 600; }
+    .stage-badge { font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; padding: 3px 10px; border-radius: 2px; background: var(--accent-light); color: var(--accent); }
+    .bill-hero-title { font-family: 'DM Serif Display', serif; font-size: clamp(1.5rem, 3.5vw, 2.1rem); line-height: 1.2; margin-bottom: 14px; }
+    .bill-meta-row { font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+    .bill-meta-row a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .bill-meta-row a:hover { color: var(--ink); }
+    .bill-latest-action { font-size: 0.85rem; color: var(--ink); font-style: italic; margin-top: 10px; }
+
+    .stage-tracker { display: flex; align-items: center; margin: 20px 0 4px; flex-wrap: wrap; gap: 0; }
+    .stage-step { display: flex; align-items: center; }
+    .stage-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--border); border: 2px solid var(--border); flex-shrink: 0; }
+    .stage-step.done .stage-dot { background: var(--gold); border-color: var(--gold); }
+    .stage-step.current .stage-dot { background: var(--accent); border-color: var(--accent); }
+    .stage-label { font-size: 0.66rem; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 0 8px; white-space: nowrap; }
+    .stage-step.done .stage-label, .stage-step.current .stage-label { color: var(--ink); }
+    .stage-connector { flex: 1; height: 2px; background: var(--border); min-width: 16px; }
+    .stage-connector.done { background: var(--gold); }
+
+    .dash-section { margin-bottom: 48px; }
+    .level-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .level-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .level-line { flex: 1; height: 1px; background: var(--border); min-width: 20px; }
+
+    .action-btn { background: var(--ink); color: var(--paper); border: none; border-radius: 3px; padding: 12px 22px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: background 0.15s; }
+    .action-btn:hover { background: var(--accent); }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .official-text-box { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 22px 24px; max-height: 420px; overflow-y: auto; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.7; color: var(--ink); }
+    .official-text-note { font-size: 0.78rem; color: var(--muted); margin-top: 10px; }
+    .official-text-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    .ai-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 24px 26px; position: relative; overflow: hidden; }
+    .ai-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--gold)); }
+    .ai-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
+    .ai-body { font-size: 0.9rem; line-height: 1.75; color: var(--ink); white-space: pre-wrap; }
+
+    .ai-disclaimer { background: var(--cream); border: 1px solid var(--border); border-left: 3px solid var(--gold); border-radius: 3px; padding: 14px 18px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+    .ai-disclaimer strong { color: var(--ink); }
+
+    .positions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .position-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 20px 22px; border-top: 3px solid var(--border); }
+    .position-card.dem { border-top-color: var(--dem); }
+    .position-card.rep { border-top-color: var(--rep); }
+    .position-card.ind { border-top-color: var(--ind); }
+    .position-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; margin-bottom: 8px; }
+    .stance-badge { display: inline-block; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; padding: 3px 10px; border-radius: 2px; margin-bottom: 12px; }
+    .stance-badge.support { background: var(--ind-bg); color: var(--ind); }
+    .stance-badge.oppose { background: var(--rep-bg); color: var(--rep); }
+    .stance-badge.mixed { background: #f5f0e8; color: var(--gold); }
+    .position-reasoning { font-size: 0.85rem; line-height: 1.65; color: var(--ink); margin-bottom: 16px; }
+    .prediction-row { font-size: 0.78rem; line-height: 1.5; color: var(--muted); margin-bottom: 8px; }
+    .prediction-row strong { color: var(--ink); font-weight: 600; }
+
+    .leg-stats { display: flex; gap: 20px; margin-bottom: 22px; flex-wrap: wrap; }
+    .leg-stat { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 14px 20px; text-align: center; flex: 1; min-width: 120px; }
+    .leg-stat-num { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--accent); line-height: 1; }
+    .leg-stat-label { font-size: 0.66rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 4px; }
+    .donor-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .donor-row:last-child { border-bottom: none; }
+    .donor-name { font-size: 0.9rem; font-weight: 500; }
+    .donor-amount { font-size: 0.875rem; font-family: 'DM Serif Display', serif; color: var(--accent); }
+    .donor-bar-wrap { width: 120px; height: 4px; background: var(--border); border-radius: 2px; margin-top: 6px; }
+    .donor-bar { height: 100%; background: var(--accent); border-radius: 2px; }
+    .section-note { font-size: 0.78rem; color: var(--muted); margin-top: 14px; line-height: 1.6; }
+    .section-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    /* Take action */
+    .template-box { background: var(--cream); border: 1.5px solid var(--ink); border-radius: 3px; padding: 16px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; line-height: 1.6; color: var(--ink); width: 100%; resize: vertical; min-height: 120px; }
+    .template-actions { margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .copy-note { font-size: 0.78rem; color: var(--ind); font-weight: 600; display: none; }
+    .copy-note.visible { display: inline; }
+    .finder-form { display: flex; gap: 10px; margin: 22px 0 18px; max-width: 560px; flex-wrap: wrap; position: relative; }
+    .finder-input { flex: 1; min-width: 220px; padding: 13px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--card); color: var(--ink); outline: none; }
+    .finder-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+    .autocomplete-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 90px; background: var(--card); border: 2px solid var(--ink); border-radius: 3px; box-shadow: 4px 4px 0 rgba(15,25,35,0.15); z-index: 200; overflow: hidden; display: none; }
+    .autocomplete-dropdown.visible { display: block; }
+    .autocomplete-item { padding: 12px 16px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: var(--accent-light); }
+    .ac-icon { color: var(--accent); flex-shrink: 0; }
+    .ac-secondary { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+    .contact-rep-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .contact-rep-name { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 3px; }
+    .contact-rep-office { font-size: 0.8rem; color: var(--muted); }
+    .contact-rep-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .contact-rep-links a { font-size: 0.78rem; color: var(--accent); text-decoration: none; font-weight: 500; border: 1px solid currentColor; padding: 5px 12px; border-radius: 2px; }
+    .contact-rep-links a:hover { background: var(--accent); color: white; }
+
+    .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
+    .footer-note { font-size: 0.75rem; color: var(--muted); }
+    .footer-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
+    @media (max-width: 600px) {
+      .stage-label { display: none; }
+      .contact-rep-card { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <a href="/" class="back-btn">&#8592; Back to Search</a>
+      <span class="topbar-brand">Civitas</span>
+    </div>
+
+    <header class="header">
+      <div class="brand-eyebrow">Civic Intelligence Platform</div>
+      <h1 class="brand-name">Ballot Decoder</h1>
+      <p class="brand-tagline">Search any bill moving through Congress — read the actual legal text, get a plain-English translation, see where it stands, how each side argues about it, who's funding the push, and how to tell your reps what you think.</p>
+    </header>
+
+    <div class="search-block">
+      <div class="search-wrapper" id="searchWrapper">
+        <input class="search-input" type="text" id="searchInput" placeholder="Search by bill name or keyword — e.g. student loans, immigration" autocomplete="off" spellcheck="false" />
+        <button class="search-btn" id="searchBtn">Search</button>
+      </div>
+      <p class="search-hint">Searches legislation currently active in Congress. Enter a bill number (e.g. "H.R. 3076") or a topic keyword.</p>
+      <div class="search-chips">
+        <span class="search-chip" data-q="infrastructure">Infrastructure</span>
+        <span class="search-chip" data-q="student loans">Student Loans</span>
+        <span class="search-chip" data-q="immigration">Immigration</span>
+        <span class="search-chip" data-q="healthcare">Healthcare</span>
+        <span class="search-chip" data-q="climate">Climate</span>
+      </div>
+    </div>
+
+    <div id="searchState"></div>
+    <div class="results-list" id="resultsList"></div>
+
+    <div id="detailState"></div>
+    <div id="billDetail">
+
+      <div class="bill-hero">
+        <div class="bill-badge-row" id="billBadgeRow"></div>
+        <h2 class="bill-hero-title" id="billTitle"></h2>
+        <div class="bill-meta-row" id="billMetaRow"></div>
+        <div class="bill-latest-action" id="billLatestAction"></div>
+        <div class="stage-tracker" id="stageTracker"></div>
+      </div>
+
+      <section class="dash-section">
+        <div class="level-header">
+          <span class="level-label">Official Text</span>
+          <span class="level-line"></span>
+        </div>
+        <div id="officialTextContainer"></div>
+      </section>
+
+      <section class="dash-section">
+        <div class="level-header">
+          <span class="level-label">Plain English Translation</span>
+          <span class="level-line"></span>
+        </div>
+        <div id="plainEnglishContainer">
+          <button class="action-btn" id="translateBtn">✨ Translate to Plain English</button>
+        </div>
+      </section>
+
+      <section class="dash-section">
+        <div class="level-header">
+          <span class="level-label">Party Positions</span>
+          <span class="level-line"></span>
+        </div>
+        <div class="ai-disclaimer">
+          <strong>This is AI-generated analysis, not an official statement.</strong> Civitas generates this to help you understand the range of arguments people make about this bill — it is not a quote from any party, not a poll, and the "predicted outcomes" are speculative illustrations of what each side argues might happen, not verified forecasts.
+        </div>
+        <div id="positionsContainer">
+          <button class="action-btn" id="positionsBtn">Generate Party Positions Analysis</button>
+        </div>
+      </section>
+
+      <section class="dash-section">
+        <div class="level-header">
+          <span class="level-label">Follow The Money</span>
+          <span class="level-line"></span>
+        </div>
+        <div id="donorsContainer"></div>
+      </section>
+
+      <section class="dash-section">
+        <div class="level-header">
+          <span class="level-label">Take Action</span>
+          <span class="level-line"></span>
+        </div>
+        <p class="search-hint" style="margin-bottom:12px;">Copy a starting message, then find your representatives below to send it their way.</p>
+        <textarea class="template-box" id="messageTemplate" rows="5"></textarea>
+        <div class="template-actions">
+          <button class="action-btn" id="copyMessageBtn">Copy Message</button>
+          <span class="copy-note" id="copyNote">Copied!</span>
+        </div>
+
+        <form class="finder-form" id="finderForm">
+          <input class="finder-input" type="text" id="finderInput" placeholder="Enter your address to find your reps" autocomplete="off" spellcheck="false" />
+          <div class="autocomplete-dropdown" id="finderDropdown"></div>
+          <button type="submit" class="action-btn">Find Reps</button>
+        </form>
+        <div id="finderResults"></div>
+      </section>
+
+    </div>
+
+    <footer class="footer">
+      <span class="footer-brand">Civitas</span>
+      <span class="footer-note">Information is power. So is knowing who to call. · <a href="/about.html">About Civitas</a></span>
+    </footer>
+  </div>
+
+  <script>
+    // ── Helpers shared with the rest of the app ─────────────────────────────
+    function getPartyClass(party = '') {
+      if (/democrat/i.test(party)) return 'party-dem';
+      if (/republican/i.test(party)) return 'party-rep';
+      if (/independent|nonpartisan/i.test(party)) return 'party-ind';
+      return 'party-other';
+    }
+    function fmtMoney(str) {
+      const n = parseInt(str, 10);
+      if (isNaN(n)) return str;
+      return '$' + n.toLocaleString();
+    }
+    function escapeHtml(str = '') {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function stripHtmlClient(html = '') {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return div.textContent || div.innerText || '';
+    }
+    function billTypeLabel(type = '') {
+      const map = { HR: 'H.R.', S: 'S.', HRES: 'H.Res.', SRES: 'S.Res.', HJRES: 'H.J.Res.', SJRES: 'S.J.Res.', HCONRES: 'H.Con.Res.', SCONRES: 'S.Con.Res.' };
+      return map[type.toUpperCase()] || type;
+    }
+    function billLabel(bill) {
+      return `${billTypeLabel(bill.type)} ${bill.number}`;
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────────
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchState = document.getElementById('searchState');
+    const resultsList = document.getElementById('resultsList');
+
+    async function runSearch(q) {
+      searchInput.value = q;
+      searchBtn.disabled = true;
+      hideBillDetail();
+      resultsList.classList.remove('visible');
+      searchState.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Searching Congress…</h3><p>Looking for "${escapeHtml(q)}" among active legislation.</p></div></div>`;
+
+      try {
+        const res = await fetch(`/api/bills-search?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        if (!data.results || data.results.length === 0) {
+          searchState.innerHTML = `<div class="state-box"><div class="state-icon">🔍</div><div><h3>No bills found</h3><p>Try a broader keyword, or search by bill number (e.g. "hr 3076").</p></div></div>`;
+          return;
+        }
+
+        searchState.innerHTML = '';
+        resultsList.innerHTML = data.results.map(b => `
+          <div class="result-card" data-congress="${b.congress}" data-type="${b.type}" data-number="${b.number}">
+            <div class="result-top">
+              <span class="result-number">${escapeHtml(billLabel(b))} · ${b.congress}th Congress</span>
+              <span class="result-date">${b.updateDate || ''}</span>
+            </div>
+            <div class="result-title">${escapeHtml(b.title || 'Untitled bill')}</div>
+            ${b.latestAction?.text ? `<div class="result-action">${escapeHtml(b.latestAction.text)}</div>` : ''}
+          </div>
+        `).join('');
+        resultsList.classList.add('visible');
+      } catch (err) {
+        searchState.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't search right now</h3><p>${escapeHtml(err.message || 'Please try again in a moment.')}</p></div></div>`;
+      } finally {
+        searchBtn.disabled = false;
+      }
+    }
+
+    searchBtn.addEventListener('click', () => {
+      const q = searchInput.value.trim();
+      if (q) { history.pushState({}, '', `/ballot.html?q=${encodeURIComponent(q)}`); runSearch(q); }
+    });
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && searchInput.value.trim()) searchBtn.click();
+    });
+    document.querySelectorAll('.search-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const q = chip.dataset.q;
+        history.pushState({}, '', `/ballot.html?q=${encodeURIComponent(q)}`);
+        runSearch(q);
+      });
+    });
+    resultsList.addEventListener('click', e => {
+      const card = e.target.closest('.result-card');
+      if (!card) return;
+      const { congress, type, number } = card.dataset;
+      window.location.href = `/ballot.html?congress=${congress}&type=${type}&number=${number}`;
+    });
+
+    // ── Bill detail ──────────────────────────────────────────────────────────
+    const billDetail = document.getElementById('billDetail');
+    const detailState = document.getElementById('detailState');
+    let currentBill = null;
+
+    function hideBillDetail() {
+      billDetail.classList.remove('visible');
+      detailState.innerHTML = '';
+    }
+
+    function showDetailLoading() {
+      searchState.innerHTML = '';
+      resultsList.classList.remove('visible');
+      billDetail.classList.remove('visible');
+      detailState.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Loading bill…</h3><p>Pulling the official record from Congress.gov.</p></div></div>`;
+    }
+
+    const STAGE_ORDER = ['Introduced', 'In Committee', 'Reported by Committee', 'Passed House', 'Passed Senate', 'Passed Both Chambers', 'Sent to President', 'Became Law'];
+
+    function renderStageTracker(stage) {
+      const el = document.getElementById('stageTracker');
+      const idx = STAGE_ORDER.indexOf(stage);
+      if (idx === -1) { el.innerHTML = ''; return; }
+      el.innerHTML = STAGE_ORDER.map((s, i) => {
+        const cls = i < idx ? 'done' : (i === idx ? 'current' : '');
+        const connector = i > 0 ? `<span class="stage-connector ${i <= idx ? 'done' : ''}"></span>` : '';
+        return `${connector}<div class="stage-step ${cls}"><span class="stage-dot"></span><span class="stage-label">${s}</span></div>`;
+      }).join('');
+    }
+
+    function renderBillHero(bill) {
+      document.getElementById('billBadgeRow').innerHTML = `
+        <span class="bill-number-badge">${escapeHtml(billLabel(bill))} · ${bill.congress}th Congress</span>
+        ${bill.policyArea ? `<span class="policy-tag">${escapeHtml(bill.policyArea)}</span>` : ''}
+        <span class="stage-badge">${escapeHtml(bill.stage)}</span>
+      `;
+      document.getElementById('billTitle').textContent = bill.title || 'Untitled bill';
+
+      const sponsorLine = bill.sponsor
+        ? `Sponsored by ${bill.sponsor.bioguideId
+            ? `<a href="/representative.html?bioguide=${encodeURIComponent(bill.sponsor.bioguideId)}">${escapeHtml(bill.sponsor.name)}</a>`
+            : escapeHtml(bill.sponsor.name)} (${escapeHtml(bill.sponsor.party || '?')}-${escapeHtml(bill.sponsor.state || '?')})`
+        : 'Sponsor not listed';
+
+      document.getElementById('billMetaRow').innerHTML = `
+        ${sponsorLine} &middot; Introduced ${bill.introducedDate || 'unknown'} &middot; ${escapeHtml(bill.originChamber || '')}
+        &middot; <a href="${bill.legislationUrl}" target="_blank" rel="noopener noreferrer">View on Congress.gov ↗</a>
+      `;
+      document.getElementById('billLatestAction').textContent = bill.latestAction?.text
+        ? `Latest action (${bill.latestAction.actionDate || '?'}): ${bill.latestAction.text}` : '';
+
+      renderStageTracker(bill.stage);
+    }
+
+    function renderOfficialText(bill) {
+      const container = document.getElementById('officialTextContainer');
+      if (!bill.officialTextExcerpt) {
+        container.innerHTML = `<div class="state-box"><div class="state-icon">📄</div><div><h3>Full text not yet available</h3><p>Congress.gov hasn't published a text version for this bill yet${bill.officialTextUrl ? '' : '.'} ${bill.officialTextUrl ? `<a href="${bill.officialTextUrl}" target="_blank" rel="noopener noreferrer">Check Congress.gov directly ↗</a>` : ''}</p></div></div>`;
+        return;
+      }
+      container.innerHTML = `
+        <div class="official-text-box">${escapeHtml(bill.officialTextExcerpt)}</div>
+        <div class="official-text-note">
+          ${bill.officialTextTruncated ? 'This is an excerpt — the full bill continues beyond what\'s shown here. ' : ''}
+          Source: official bill text via Congress.gov.
+          ${bill.officialTextUrl ? ` <a href="${bill.officialTextUrl}" target="_blank" rel="noopener noreferrer">Read the full text ↗</a>` : ''}
+        </div>
+      `;
+    }
+
+    // ── Plain English (on demand) ────────────────────────────────────────────
+    const translateBtn = document.getElementById('translateBtn');
+    const plainEnglishContainer = document.getElementById('plainEnglishContainer');
+
+    async function translateBill() {
+      translateBtn.disabled = true;
+      translateBtn.textContent = 'Translating…';
+      plainEnglishContainer.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Translating…</h3><p>Claude is reading the official text and summary.</p></div></div>`;
+
+      try {
+        const res = await fetch('/api/plain-english', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: currentBill.title,
+            officialSummary: currentBill.officialSummaryHtml ? stripHtmlClient(currentBill.officialSummaryHtml) : null,
+            officialTextExcerpt: currentBill.officialTextExcerpt,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        plainEnglishContainer.innerHTML = `
+          <div class="ai-card">
+            <div class="ai-tag">✨ AI-generated summary</div>
+            <div class="ai-body">${escapeHtml(data.plainEnglish)}</div>
+          </div>
+        `;
+      } catch (err) {
+        plainEnglishContainer.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't generate a translation</h3><p>${escapeHtml(err.message || 'Please try again.')}</p></div></div><button class="action-btn" id="translateBtn" style="margin-top:14px;">Try Again</button>`;
+        document.getElementById('translateBtn').addEventListener('click', translateBill);
+      }
+    }
+    translateBtn.addEventListener('click', translateBill);
+
+    // ── Party positions (on demand) ──────────────────────────────────────────
+    const positionsBtn = document.getElementById('positionsBtn');
+    const positionsContainer = document.getElementById('positionsContainer');
+
+    function renderPositionCard(label, cls, data) {
+      if (!data) return '';
+      const stance = (data.stance || 'mixed').toLowerCase();
+      const p = data.predictions || {};
+      return `
+        <div class="position-card ${cls}">
+          <div class="position-title">${label}</div>
+          <span class="stance-badge ${['support','oppose'].includes(stance) ? stance : 'mixed'}">${escapeHtml(data.stance || 'Mixed')}</span>
+          <p class="position-reasoning">${escapeHtml(data.reasoning || '')}</p>
+          ${p.five_year ? `<div class="prediction-row"><strong>In 5 years:</strong> ${escapeHtml(p.five_year)}</div>` : ''}
+          ${p.ten_year ? `<div class="prediction-row"><strong>In 10 years:</strong> ${escapeHtml(p.ten_year)}</div>` : ''}
+          ${p.twenty_year ? `<div class="prediction-row"><strong>In 20 years:</strong> ${escapeHtml(p.twenty_year)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    async function generatePositions() {
+      positionsBtn.disabled = true;
+      positionsBtn.textContent = 'Generating…';
+      positionsContainer.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Analyzing the debate…</h3><p>This takes a few seconds.</p></div></div>`;
+
+      try {
+        const res = await fetch('/api/party-positions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: currentBill.title,
+            officialSummary: currentBill.officialSummaryHtml ? stripHtmlClient(currentBill.officialSummaryHtml) : null,
+            officialTextExcerpt: currentBill.officialTextExcerpt,
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        const pos = data.positions || {};
+        positionsContainer.innerHTML = `<div class="positions-grid">
+          ${renderPositionCard('Democrats', 'dem', pos.democrats)}
+          ${renderPositionCard('Republicans', 'rep', pos.republicans)}
+          ${renderPositionCard('Independents', 'ind', pos.independents)}
+        </div>`;
+      } catch (err) {
+        positionsContainer.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't generate an analysis</h3><p>${escapeHtml(err.message || 'Please try again.')}</p></div></div><button class="action-btn" id="positionsBtn" style="margin-top:14px;">Try Again</button>`;
+        document.getElementById('positionsBtn').addEventListener('click', generatePositions);
+      }
+    }
+    positionsBtn.addEventListener('click', generatePositions);
+
+    // ── Follow the money ─────────────────────────────────────────────────────
+    async function renderDonors(bill) {
+      const el = document.getElementById('donorsContainer');
+      if (!bill.sponsor?.bioguideId) {
+        el.innerHTML = `<div class="state-box"><div class="state-icon">💰</div><div><h3>No sponsor on record</h3><p>This bill doesn't have a listed sponsor to trace campaign funding for.</p></div></div>`;
+        return;
+      }
+
+      const chamber = bill.originChamber === 'Senate' ? 'senate' : 'house';
+      el.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Loading campaign finance data…</h3><p>Via the Federal Election Commission.</p></div></div>`;
+
+      try {
+        const res = await fetch(`/api/donors?name=${encodeURIComponent(bill.sponsor.name)}&chamber=${chamber}&state=${encodeURIComponent(bill.sponsor.state || '')}`);
+        const data = await res.json();
+
+        if (data.error === 'FEC API key not configured') {
+          el.innerHTML = `<div class="state-box"><div class="state-icon">💰</div><div><h3>Donor data not configured</h3><p>Add <strong>FEC_API_KEY</strong> to enable this section.</p></div></div>`;
+          return;
+        }
+        if (!data.found) {
+          el.innerHTML = `<div class="state-box"><div class="state-icon">💰</div><div><h3>No FEC record found</h3><p>Couldn't match ${escapeHtml(bill.sponsor.name)} to an FEC campaign committee.</p></div></div>`;
+          return;
+        }
+
+        const junkLabel = /^(null|none|n\/a|na|unknown|information requested)\b/i;
+        const byEmployer = (data.byEmployer || []).filter(d => d.label && !junkLabel.test(String(d.label).trim()));
+
+        let html = `<p class="search-hint" style="margin-bottom:18px;">This bill's sponsor, ${escapeHtml(bill.sponsor.name)}, is funded by:</p>`;
+
+        if (data.totals) {
+          html += `<div class="leg-stats">
+            <div class="leg-stat"><div class="leg-stat-num">${fmtMoney(data.totals.receipts)}</div><div class="leg-stat-label">Total Raised</div></div>
+            <div class="leg-stat"><div class="leg-stat-num">${fmtMoney(data.totals.individualContributions)}</div><div class="leg-stat-label">From Individuals</div></div>
+            <div class="leg-stat"><div class="leg-stat-num">${fmtMoney(data.totals.cashOnHand)}</div><div class="leg-stat-label">Cash On Hand</div></div>
+          </div>`;
+        }
+
+        const maxEmployer = Math.max(...byEmployer.map(d => d.total), 1);
+        if (byEmployer.length) {
+          html += '<div class="level-label" style="margin-bottom:10px;">Top Contributors by Employer / Occupation</div>';
+          html += byEmployer.map(d => `
+            <div class="donor-row">
+              <div><div class="donor-name">${escapeHtml(d.label)}</div><div class="donor-bar-wrap"><div class="donor-bar" style="width:${Math.round(d.total / maxEmployer * 100)}%"></div></div></div>
+              <div class="donor-amount">${fmtMoney(d.total)}</div>
+            </div>
+          `).join('');
+        }
+
+        html += `<p class="section-note">Source: Federal Election Commission — <a href="${data.fecUrl}" target="_blank" rel="noopener noreferrer">full record on FEC.gov</a>. This shows who funds the sponsor's campaign, not itemized lobbying spend for or against this specific bill. For lobbying disclosures, <a href="https://www.opensecrets.org/federal-lobbying" target="_blank" rel="noopener noreferrer">search OpenSecrets' lobbying database ↗</a>.</p>`;
+
+        el.innerHTML = html;
+      } catch {
+        el.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't load donor data</h3><p>Please try again in a moment.</p></div></div>`;
+      }
+    }
+
+    // ── Take action ───────────────────────────────────────────────────────────
+    const messageTemplate = document.getElementById('messageTemplate');
+    const copyMessageBtn = document.getElementById('copyMessageBtn');
+    const copyNote = document.getElementById('copyNote');
+
+    function buildMessageTemplate(bill) {
+      const title = (bill.title || '').trim().replace(/\.+$/, '');
+      return `I'm writing to share my views on ${billLabel(bill)}, "${title}."\n\n[Add your position and why it matters to you here.]\n\nThank you for representing me on this issue.`;
+    }
+
+    copyMessageBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(messageTemplate.value);
+        copyNote.classList.add('visible');
+        setTimeout(() => copyNote.classList.remove('visible'), 2000);
+      } catch {
+        messageTemplate.select();
+      }
+    });
+
+    // Rep finder (address autocomplete + lookup), scoped to the Take Action section.
+    const finderForm = document.getElementById('finderForm');
+    const finderInput = document.getElementById('finderInput');
+    const finderDropdown = document.getElementById('finderDropdown');
+    const finderResults = document.getElementById('finderResults');
+    let finderSuggestions = [];
+    let finderDebounce = null;
+
+    function renderFinderDropdown() {
+      if (!finderSuggestions.length) { finderDropdown.classList.remove('visible'); return; }
+      finderDropdown.innerHTML = finderSuggestions.map((s, i) => `
+        <div class="autocomplete-item" data-idx="${i}">
+          <span class="ac-icon">📍</span>
+          <div><div>${escapeHtml(s.main)}</div>${s.secondary ? `<div class="ac-secondary">${escapeHtml(s.secondary)}</div>` : ''}</div>
+        </div>
+      `).join('');
+      finderDropdown.classList.add('visible');
+      finderDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('mousedown', e => {
+          e.preventDefault();
+          const s = finderSuggestions[parseInt(item.dataset.idx)];
+          finderInput.value = s.full || `${s.main}, ${s.secondary}`;
+          finderSuggestions = [];
+          finderDropdown.classList.remove('visible');
+        });
+      });
+    }
+
+    finderInput.addEventListener('input', e => {
+      clearTimeout(finderDebounce);
+      const val = e.target.value;
+      finderDebounce = setTimeout(async () => {
+        if (val.trim().length < 4) { finderSuggestions = []; renderFinderDropdown(); return; }
+        try {
+          const res = await fetch(`/api/autocomplete?input=${encodeURIComponent(val)}`);
+          const data = await res.json();
+          finderSuggestions = data.suggestions || [];
+          renderFinderDropdown();
+        } catch { finderSuggestions = []; renderFinderDropdown(); }
+      }, 300);
+    });
+    document.addEventListener('click', e => {
+      if (!finderForm.contains(e.target)) finderDropdown.classList.remove('visible');
+    });
+
+    finderForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const address = finderInput.value.trim();
+      if (!address) return;
+      finderDropdown.classList.remove('visible');
+      finderResults.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Finding your representatives…</h3></div></div>`;
+
+      try {
+        const res = await fetch(`/api/representatives?address=${encodeURIComponent(address)}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const officials = data.officials || [];
+        if (!officials.length) throw new Error('No representatives found for that address.');
+
+        finderResults.innerHTML = officials.map((o, idx) => {
+          const office = (data.offices || []).find(off => (off.officialIndices || []).includes(idx));
+          const phone = o.phones?.[0];
+          const url = o.urls?.[0];
+          return `
+            <div class="contact-rep-card">
+              <div>
+                <div class="contact-rep-name">${escapeHtml(o.name)}</div>
+                <div class="contact-rep-office">${escapeHtml(office?.name || '')}</div>
+              </div>
+              <div class="contact-rep-links">
+                ${phone ? `<a href="tel:${phone}">📞 Call</a>` : ''}
+                ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer">🔗 Contact Online</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        finderResults.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't find representatives</h3><p>${escapeHtml(err.message || 'Please check the address and try again.')}</p></div></div>`;
+      }
+    });
+
+    // ── Load a bill ───────────────────────────────────────────────────────────
+    async function loadBill(congress, type, number) {
+      showDetailLoading();
+      try {
+        const res = await fetch(`/api/bill-detail?congress=${encodeURIComponent(congress)}&type=${encodeURIComponent(type)}&number=${encodeURIComponent(number)}`);
+        const bill = await res.json();
+        if (bill.error) throw new Error(bill.error);
+
+        currentBill = bill;
+        detailState.innerHTML = '';
+        billDetail.classList.add('visible');
+        document.title = `${billLabel(bill)} — ${bill.title || 'Bill'} — Ballot Decoder — Civitas`;
+
+        renderBillHero(bill);
+        renderOfficialText(bill);
+        renderDonors(bill);
+        messageTemplate.value = buildMessageTemplate(bill);
+
+        // Reset on-demand sections for the newly loaded bill.
+        translateBtn.disabled = false; translateBtn.textContent = '✨ Translate to Plain English';
+        plainEnglishContainer.innerHTML = '';
+        plainEnglishContainer.appendChild(translateBtn);
+        positionsBtn.disabled = false; positionsBtn.textContent = 'Generate Party Positions Analysis';
+        positionsContainer.innerHTML = '';
+        positionsContainer.appendChild(positionsBtn);
+
+        billDetail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        detailState.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't load this bill</h3><p>${escapeHtml(err.message || 'Please try again.')}</p></div></div>`;
+      }
+    }
+
+    // ── Init from query string ───────────────────────────────────────────────
+    (function init() {
+      const params = new URLSearchParams(window.location.search);
+      const congress = params.get('congress');
+      const type = params.get('type');
+      const number = params.get('number');
+      const q = params.get('q');
+
+      if (congress && type && number) {
+        loadBill(congress, type, number);
+      } else if (q) {
+        runSearch(q);
+      }
+    })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

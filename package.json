@@ -6,5 +6,8 @@
   },
   "scripts": {
     "build": "echo 'no build needed'"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0"
   }
 }
