@@ -59,11 +59,7 @@
     }
     body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
     .app { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding-top: 28px; min-height: 24px; flex-wrap: wrap; }
-    .site-nav { display: flex; gap: 20px; }
-    .nav-link { font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; color: var(--muted); text-decoration: none; }
-    .nav-link:hover { color: var(--ink); }
-    .auth-bar { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
+    .auth-bar { display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding-top: 28px; min-height: 24px; }
     .auth-email { font-size: 0.8rem; color: var(--muted); }
     .auth-btn { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: background 0.15s, border-color 0.15s, color 0.15s; }
     .auth-btn.primary { background: var(--ink); color: var(--paper); border: none; padding: 9px 18px; border-radius: 3px; }
@@ -160,12 +156,7 @@
 </head>
 <body>
   <div class="app">
-    <div class="top-nav">
-      <nav class="site-nav">
-        <a href="/ballot.html" class="nav-link">🗳️ Ballot Decoder</a>
-      </nav>
-      <div class="auth-bar" id="authBar"></div>
-    </div>
+    <div class="auth-bar" id="authBar"></div>
     <header class="header">
       <div class="brand">
         <div class="brand-eyebrow">Civic Intelligence Platform</div>

@@ -51,18 +51,25 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const q = (req.query.q || '').toString().trim();
-  if (!q) return res.status(400).json({ error: 'Query (q) is required' });
+  const trending = req.query.trending === '1';
+  if (!q && !trending) return res.status(400).json({ error: 'Query (q) is required' });
 
   const apiKey = process.env.CONGRESS_API_KEY;
   if (!apiKey) return res.status(503).json({ error: 'Congress API key not configured' });
 
   try {
     const bills = await loadPool(apiKey);
-    const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
-    const matches = bills.filter(b => {
-      const haystack = `${b.title || ''}`.toLowerCase();
-      return terms.every(t => haystack.includes(t));
-    });
+
+    let matches;
+    if (q) {
+      const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+      matches = bills.filter(b => {
+        const haystack = `${b.title || ''}`.toLowerCase();
+        return terms.every(t => haystack.includes(t));
+      });
+    } else {
+      matches = bills.slice();
+    }
 
     matches.sort((a, b) => new Date(b.updateDate || 0) - new Date(a.updateDate || 0));
 

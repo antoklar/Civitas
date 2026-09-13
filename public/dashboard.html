@@ -144,6 +144,26 @@
     .soon-tag { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--border); font-weight: 600; border: 1px solid var(--border); padding: 2px 7px; border-radius: 2px; white-space: nowrap; transition: color 0.2s, border-color 0.2s; }
     .rep-card:hover .soon-tag { color: var(--gold); border-color: var(--gold); }
 
+    /* What's Happening in Congress */
+    .congress-feed-group { margin-bottom: 30px; }
+    .congress-feed-group:last-child { margin-bottom: 0; }
+    .feed-subheader { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .feed-subtitle { font-family: 'DM Serif Display', serif; font-size: 1.05rem; }
+    .feed-subnote { font-size: 0.78rem; color: var(--muted); }
+    .bill-feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+    .bill-feed-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 16px 18px; text-decoration: none; color: inherit; display: block; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; }
+    .bill-feed-card:hover { border-color: var(--accent); box-shadow: 3px 3px 0 rgba(15,25,35,0.08); transform: translate(-1px, -1px); }
+    .bill-feed-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .bill-feed-number { font-size: 0.66rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .bill-feed-status { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; background: var(--accent-light); color: var(--accent); padding: 3px 8px; border-radius: 2px; white-space: nowrap; }
+    .bill-feed-title { font-family: 'DM Serif Display', serif; font-size: 0.94rem; line-height: 1.35; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .bill-feed-summary { font-size: 0.8rem; color: var(--muted); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .bill-feed-rep { font-size: 0.76rem; color: var(--accent); font-weight: 600; margin-top: 10px; }
+    .feed-empty-note { font-size: 0.85rem; color: var(--muted); grid-column: 1 / -1; }
+    .feed-loading { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--muted); font-style: italic; grid-column: 1 / -1; }
+    .feed-mini-spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: feed-spin 0.6s linear infinite; flex-shrink: 0; }
+    @keyframes feed-spin { to { transform: rotate(360deg); } }
+
     .footer { margin-top: 80px; padding-top: 24px; border-top: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .footer-brand { font-family: 'DM Serif Display', serif; font-size: 1.1rem; }
     .footer-note { font-size: 0.75rem; color: var(--muted); }
@@ -166,7 +186,6 @@
       </div>
       <div class="header-actions">
         <a href="/" class="nav-link">&#8592; Back to Search</a>
-        <a href="/ballot.html" class="nav-link">🗳️ Ballot Decoder</a>
         <button class="logout-btn" id="logoutBtn">Log Out</button>
       </div>
     </header>
@@ -214,6 +233,43 @@
 
     <section class="dash-section">
       <div class="level-header">
+        <span class="level-label">What's Happening in Congress</span>
+        <span class="level-line"></span>
+      </div>
+
+      <div class="congress-feed-group">
+        <div class="feed-subheader">
+          <span class="feed-subtitle">🔥 Trending Now</span>
+          <span class="feed-subnote">Bills with recent momentum</span>
+        </div>
+        <div class="bill-feed-grid" id="trendingFeed">
+          <div class="feed-loading"><div class="feed-mini-spinner"></div>Loading…</div>
+        </div>
+      </div>
+
+      <div class="congress-feed-group">
+        <div class="feed-subheader">
+          <span class="feed-subtitle">🏛️ Your Reps' Activity</span>
+          <span class="feed-subnote">Bills your representatives sponsored</span>
+        </div>
+        <div class="bill-feed-grid" id="repsActivityFeed">
+          <div class="feed-loading"><div class="feed-mini-spinner"></div>Loading…</div>
+        </div>
+      </div>
+
+      <div class="congress-feed-group">
+        <div class="feed-subheader">
+          <span class="feed-subtitle">🔎 Under the Radar</span>
+          <span class="feed-subnote">Moving through committee, low media attention</span>
+        </div>
+        <div class="bill-feed-grid" id="underRadarFeed">
+          <div class="feed-loading"><div class="feed-mini-spinner"></div>Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dash-section">
+      <div class="level-header">
         <span class="level-label">Upcoming Civic Events</span>
         <span class="level-line"></span>
       </div>
@@ -244,6 +300,7 @@
     let currentUser = null;
     let addresses = [];
     let allRepsData = [];
+    let repsBioguideMap = {};
 
     function getPartyClass(party='') {
       if (/democrat/i.test(party)) return 'party-dem';
@@ -537,6 +594,13 @@
         });
       });
 
+      repsBioguideMap = {};
+      (data.officials || []).forEach(o => {
+        if (o.bioguideId) repsBioguideMap[o.bioguideId] = { name: o.name, party: o.party };
+      });
+      const bioguideIds = Object.keys(repsBioguideMap);
+      if (bioguideIds.length) loadRepsActivityFeed(bioguideIds);
+
       if (Object.keys(grouped).length === 0) {
         repsContainer.innerHTML = '';
         showRepsStatus('🏛️', 'No representatives found', 'We couldn\'t find representatives for that address. Double-check it under My Addresses.');
@@ -586,6 +650,65 @@
           </div>
         `;
       }).join('');
+    }
+
+    // ── What's Happening in Congress ─────────────────────────────────────
+    function billTypeLabelFeed(type = '') {
+      const map = { HR: 'H.R.', S: 'S.', HRES: 'H.Res.', SRES: 'S.Res.', HJRES: 'H.J.Res.', SJRES: 'S.J.Res.', HCONRES: 'H.Con.Res.', SCONRES: 'S.Con.Res.' };
+      return map[type.toUpperCase()] || type;
+    }
+
+    function renderFeedGrid(elId, bills, emptyMessage) {
+      const el = document.getElementById(elId);
+      if (!bills || !bills.length) {
+        el.innerHTML = `<p class="feed-empty-note">${emptyMessage}</p>`;
+        return;
+      }
+      el.innerHTML = bills.map(b => {
+        const repInfo = b.sponsorBioguideId ? repsBioguideMap[b.sponsorBioguideId] : null;
+        return `
+          <a class="bill-feed-card" href="/ballot.html?congress=${b.congress}&type=${b.type}&number=${b.number}">
+            <div class="bill-feed-top">
+              <span class="bill-feed-number">${billTypeLabelFeed(b.type)} ${b.number}</span>
+              <span class="bill-feed-status">${b.status}</span>
+            </div>
+            <div class="bill-feed-title">${b.title || 'Untitled bill'}</div>
+            <p class="bill-feed-summary">${b.summary || 'Summary not available yet.'}</p>
+            ${repInfo ? `<div class="bill-feed-rep">👤 Sponsored by ${repInfo.name}</div>` : ''}
+          </a>
+        `;
+      }).join('');
+    }
+
+    async function loadTrendingFeed() {
+      try {
+        const res = await fetch('/api/bills-feed');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        renderFeedGrid('trendingFeed', data.trending, 'No trending bills right now.');
+        renderFeedGrid('underRadarFeed', data.underRadar, 'Nothing under-the-radar to show right now.');
+      } catch {
+        document.getElementById('trendingFeed').innerHTML = '<p class="feed-empty-note">Couldn\'t load bills right now.</p>';
+        document.getElementById('underRadarFeed').innerHTML = '<p class="feed-empty-note">Couldn\'t load bills right now.</p>';
+      }
+      // Placeholder until (if ever) reps resolve and loadRepsActivityFeed runs.
+      // Guarded so a slow trending fetch can't clobber activity that already loaded.
+      if (Object.keys(repsBioguideMap).length === 0) {
+        document.getElementById('repsActivityFeed').innerHTML = '<p class="feed-empty-note">Add an address above to see bills your representatives are working on.</p>';
+      }
+    }
+
+    async function loadRepsActivityFeed(bioguideIds) {
+      const el = document.getElementById('repsActivityFeed');
+      el.innerHTML = '<div class="feed-loading"><div class="feed-mini-spinner"></div>Loading…</div>';
+      try {
+        const res = await fetch(`/api/bills-feed?bioguideIds=${encodeURIComponent(bioguideIds.join(','))}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        renderFeedGrid('repsActivityFeed', data.repsActivity, 'Your reps haven\'t sponsored any recent bills we could find.');
+      } catch {
+        el.innerHTML = '<p class="feed-empty-note">Couldn\'t load your reps\' activity right now.</p>';
+      }
     }
 
     async function fetchRepsOnce(address) {
@@ -641,6 +764,7 @@
       if (!session) { window.location.href = '/auth.html'; return; }
       currentUser = session.user;
       renderUser(currentUser);
+      loadTrendingFeed();
       try {
         await loadAddresses();
       } catch (err) {

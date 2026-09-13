@@ -41,8 +41,17 @@
     .brand-name { font-family: 'DM Serif Display', serif; font-size: clamp(2.6rem, 6vw, 3.8rem); line-height: 1; color: var(--ink); letter-spacing: -1.5px; margin-bottom: 14px; }
     .brand-tagline { font-size: 0.95rem; color: var(--muted); font-weight: 300; line-height: 1.65; max-width: 560px; }
 
+    /* Category tiles */
+    .category-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin: 36px 0 40px; }
+    .category-tile { background: var(--card); border: 1.5px solid var(--border); border-radius: 4px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s; font-family: 'DM Sans', sans-serif; }
+    .category-tile:hover { border-color: var(--accent); box-shadow: 3px 3px 0 rgba(15,25,35,0.08); transform: translate(-1px, -1px); }
+    .category-tile.active { border-color: var(--accent); background: var(--accent-light); }
+    .category-icon { font-size: 1.6rem; }
+    .category-label { font-size: 0.76rem; font-weight: 600; color: var(--ink); letter-spacing: 0.3px; }
+
+    .results-heading { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 16px; }
+
     /* Search */
-    .search-block { margin: 40px 0 52px; }
     .search-wrapper { position: relative; max-width: 620px; }
     .search-input { width: 100%; padding: 16px 110px 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 1rem; border: 2px solid var(--ink); border-radius: 3px; background: var(--cream); color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
     .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
@@ -50,9 +59,12 @@
     .search-btn:hover { background: var(--accent); }
     .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .search-hint { margin-top: 8px; font-size: 0.78rem; color: var(--muted); font-style: italic; max-width: 620px; }
-    .search-chips { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-    .search-chip { font-size: 0.75rem; color: var(--accent); border: 1px solid var(--accent-light); background: var(--accent-light); padding: 5px 12px; border-radius: 20px; cursor: pointer; font-weight: 500; transition: background 0.15s, color 0.15s; }
-    .search-chip:hover { background: var(--accent); color: white; }
+
+    .secondary-search { margin: 48px 0 52px; padding-top: 32px; border-top: 1px solid var(--border); max-width: 480px; }
+    .secondary-search-label { font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+    .search-wrapper.small { max-width: 480px; }
+    .search-input.small { padding: 11px 84px 11px 14px; font-size: 0.85rem; border-width: 1.5px; }
+    .search-btn.small { padding: 7px 12px; font-size: 0.66rem; }
 
     .results-list { display: none; margin-top: 24px; }
     .results-list.visible { display: block; }
@@ -188,26 +200,32 @@
     <header class="header">
       <div class="brand-eyebrow">Civic Intelligence Platform</div>
       <h1 class="brand-name">Ballot Decoder</h1>
-      <p class="brand-tagline">Search any bill moving through Congress — read the actual legal text, get a plain-English translation, see where it stands, how each side argues about it, who's funding the push, and how to tell your reps what you think.</p>
+      <p class="brand-tagline">Browse a topic or pick a trending bill — read the actual legal text, get a plain-English translation, see where it stands, how each side argues about it, who's funding the push, and how to tell your reps what you think.</p>
     </header>
 
-    <div class="search-block">
-      <div class="search-wrapper" id="searchWrapper">
-        <input class="search-input" type="text" id="searchInput" placeholder="Search by bill name or keyword — e.g. student loans, immigration" autocomplete="off" spellcheck="false" />
-        <button class="search-btn" id="searchBtn">Search</button>
-      </div>
-      <p class="search-hint">Searches legislation currently active in Congress. Enter a bill number (e.g. "H.R. 3076") or a topic keyword.</p>
-      <div class="search-chips">
-        <span class="search-chip" data-q="infrastructure">Infrastructure</span>
-        <span class="search-chip" data-q="student loans">Student Loans</span>
-        <span class="search-chip" data-q="immigration">Immigration</span>
-        <span class="search-chip" data-q="healthcare">Healthcare</span>
-        <span class="search-chip" data-q="climate">Climate</span>
-      </div>
+    <div class="category-tiles" id="categoryTiles">
+      <button class="category-tile" data-q="health" data-label="Healthcare Bills"><span class="category-icon">🏥</span><span class="category-label">Healthcare</span></button>
+      <button class="category-tile" data-q="economic" data-label="Economy Bills"><span class="category-icon">💰</span><span class="category-label">Economy</span></button>
+      <button class="category-tile" data-q="immigration" data-label="Immigration Bills"><span class="category-icon">🛂</span><span class="category-label">Immigration</span></button>
+      <button class="category-tile" data-q="education" data-label="Education Bills"><span class="category-icon">🎓</span><span class="category-label">Education</span></button>
+      <button class="category-tile" data-q="defense" data-label="Defense Bills"><span class="category-icon">🛡️</span><span class="category-label">Defense</span></button>
+      <button class="category-tile" data-q="environment" data-label="Environment Bills"><span class="category-icon">🌱</span><span class="category-label">Environment</span></button>
+      <button class="category-tile" data-q="housing" data-label="Housing Bills"><span class="category-icon">🏠</span><span class="category-label">Housing</span></button>
+      <button class="category-tile" data-q="veterans" data-label="Veterans Bills"><span class="category-icon">🎖️</span><span class="category-label">Veterans</span></button>
     </div>
 
+    <div class="results-heading" id="resultsHeading">Trending in Congress</div>
     <div id="searchState"></div>
     <div class="results-list" id="resultsList"></div>
+
+    <div class="secondary-search">
+      <p class="secondary-search-label">Looking for something specific?</p>
+      <div class="search-wrapper small" id="searchWrapper">
+        <input class="search-input small" type="text" id="searchInput" placeholder="Search by bill name, number, or keyword" autocomplete="off" spellcheck="false" />
+        <button class="search-btn small" id="searchBtn">Search</button>
+      </div>
+      <p class="search-hint">Searches legislation currently active in Congress. Enter a bill number (e.g. "H.R. 3076") or a topic keyword.</p>
+    </div>
 
     <div id="detailState"></div>
     <div id="billDetail">
@@ -316,16 +334,54 @@
       return `${billTypeLabel(bill.type)} ${bill.number}`;
     }
 
-    // ── Search ───────────────────────────────────────────────────────────────
+    // ── Search / Browse ─────────────────────────────────────────────────────
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const searchState = document.getElementById('searchState');
     const resultsList = document.getElementById('resultsList');
+    const resultsHeading = document.getElementById('resultsHeading');
+    const categoryTiles = document.getElementById('categoryTiles');
 
-    async function runSearch(q) {
+    function renderResults(results, emptyTitle, emptyText) {
+      if (!results || results.length === 0) {
+        resultsList.classList.remove('visible');
+        searchState.innerHTML = `<div class="state-box"><div class="state-icon">🔍</div><div><h3>${escapeHtml(emptyTitle)}</h3><p>${escapeHtml(emptyText)}</p></div></div>`;
+        return;
+      }
+      searchState.innerHTML = '';
+      resultsList.innerHTML = results.map(b => `
+        <div class="result-card" data-congress="${b.congress}" data-type="${b.type}" data-number="${b.number}">
+          <div class="result-top">
+            <span class="result-number">${escapeHtml(billLabel(b))} · ${b.congress}th Congress</span>
+            <span class="result-date">${b.updateDate || ''}</span>
+          </div>
+          <div class="result-title">${escapeHtml(b.title || 'Untitled bill')}</div>
+          ${b.latestAction?.text ? `<div class="result-action">${escapeHtml(b.latestAction.text)}</div>` : ''}
+        </div>
+      `).join('');
+      resultsList.classList.add('visible');
+    }
+
+    async function loadTrending() {
+      resultsHeading.textContent = 'Trending in Congress';
+      categoryTiles.querySelectorAll('.category-tile').forEach(t => t.classList.remove('active'));
+      resultsList.classList.remove('visible');
+      searchState.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Loading trending bills…</h3><p>Sorted by recent activity in Congress.</p></div></div>`;
+      try {
+        const res = await fetch('/api/bills-search?trending=1');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        renderResults(data.results, 'No trending bills right now', 'Please check back in a bit.');
+      } catch (err) {
+        searchState.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't load trending bills</h3><p>${escapeHtml(err.message || 'Please try again in a moment.')}</p></div></div>`;
+      }
+    }
+
+    async function runSearch(q, headingLabel) {
       searchInput.value = q;
       searchBtn.disabled = true;
       hideBillDetail();
+      resultsHeading.textContent = headingLabel || `Results for "${q}"`;
       resultsList.classList.remove('visible');
       searchState.innerHTML = `<div class="state-box"><div class="spinner"></div><div><h3>Searching Congress…</h3><p>Looking for "${escapeHtml(q)}" among active legislation.</p></div></div>`;
 
@@ -333,24 +389,8 @@
         const res = await fetch(`/api/bills-search?q=${encodeURIComponent(q)}`);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-
-        if (!data.results || data.results.length === 0) {
-          searchState.innerHTML = `<div class="state-box"><div class="state-icon">🔍</div><div><h3>No bills found</h3><p>Try a broader keyword, or search by bill number (e.g. "hr 3076").</p></div></div>`;
-          return;
-        }
-
-        searchState.innerHTML = '';
-        resultsList.innerHTML = data.results.map(b => `
-          <div class="result-card" data-congress="${b.congress}" data-type="${b.type}" data-number="${b.number}">
-            <div class="result-top">
-              <span class="result-number">${escapeHtml(billLabel(b))} · ${b.congress}th Congress</span>
-              <span class="result-date">${b.updateDate || ''}</span>
-            </div>
-            <div class="result-title">${escapeHtml(b.title || 'Untitled bill')}</div>
-            ${b.latestAction?.text ? `<div class="result-action">${escapeHtml(b.latestAction.text)}</div>` : ''}
-          </div>
-        `).join('');
-        resultsList.classList.add('visible');
+        renderResults(data.results, 'No bills found', 'Try a broader keyword, or search by bill number (e.g. "hr 3076").');
+        resultsHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
         searchState.innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><div><h3>Couldn't search right now</h3><p>${escapeHtml(err.message || 'Please try again in a moment.')}</p></div></div>`;
       } finally {
@@ -360,16 +400,22 @@
 
     searchBtn.addEventListener('click', () => {
       const q = searchInput.value.trim();
-      if (q) { history.pushState({}, '', `/ballot.html?q=${encodeURIComponent(q)}`); runSearch(q); }
+      if (q) {
+        history.pushState({}, '', `/ballot.html?q=${encodeURIComponent(q)}`);
+        categoryTiles.querySelectorAll('.category-tile').forEach(t => t.classList.remove('active'));
+        runSearch(q);
+      }
     });
     searchInput.addEventListener('keydown', e => {
       if (e.key === 'Enter' && searchInput.value.trim()) searchBtn.click();
     });
-    document.querySelectorAll('.search-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const q = chip.dataset.q;
+    categoryTiles.querySelectorAll('.category-tile').forEach(tile => {
+      tile.addEventListener('click', () => {
+        categoryTiles.querySelectorAll('.category-tile').forEach(t => t.classList.remove('active'));
+        tile.classList.add('active');
+        const q = tile.dataset.q;
         history.pushState({}, '', `/ballot.html?q=${encodeURIComponent(q)}`);
-        runSearch(q);
+        runSearch(q, tile.dataset.label);
       });
     });
     resultsList.addEventListener('click', e => {
@@ -733,8 +779,11 @@
 
       if (congress && type && number) {
         loadBill(congress, type, number);
+        loadTrending();
       } else if (q) {
         runSearch(q);
+      } else {
+        loadTrending();
       }
     })();
   </script>
