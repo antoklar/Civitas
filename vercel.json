@@ -1,5 +1,13 @@
 {
   "outputDirectory": "public",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "civitasus.com" }],
+      "destination": "https://www.civitasus.com/:path*",
+      "statusCode": 301
+    }
+  ],
   "rewrites": [
     {
       "source": "/representative.html",
