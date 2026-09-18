@@ -51,9 +51,6 @@
     .level-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
     .level-label { font-size: 0.68rem; letter-spacing: 3.5px; text-transform: uppercase; font-weight: 600; color: var(--muted); white-space: nowrap; }
     .level-line { flex: 1; height: 1px; background: var(--border); }
-    .level-count { font-size: 0.7rem; color: var(--border); font-weight: 500; }
-    .level-group { margin-bottom: 32px; }
-    .level-group:last-child { margin-bottom: 0; }
 
     .empty-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 32px 28px; position: relative; overflow: hidden; display: flex; align-items: flex-start; gap: 18px; }
     .empty-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--gold)); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
@@ -121,6 +118,18 @@
     .spinner { width: 22px; height: 22px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Rep tabs */
+    .rep-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .rep-tab { background: none; border: 1.5px solid var(--border); color: var(--muted); padding: 9px 18px; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; }
+    .rep-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .rep-tab.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+    .rep-tab.active:hover { color: var(--paper); }
+    .rep-branch-tabs { margin-top: -10px; }
+    .rep-branch-tabs .rep-tab { padding: 6px 14px; font-size: 0.66rem; }
+    .rep-branch-tabs .rep-tab.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+    .rep-branch-tabs .rep-tab.active:hover { color: var(--accent); }
+    .rep-branch-tabs[hidden] { display: none; }
+
     /* Rep cards (mirrors homepage results styling) */
     .rep-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 22px 24px; margin-bottom: 10px; display: grid; grid-template-columns: 52px 1fr auto; gap: 18px; align-items: start; transition: box-shadow 0.18s, transform 0.15s; position: relative; overflow: hidden; cursor: pointer; }
     .rep-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
@@ -128,6 +137,8 @@
     .rep-card.party-rep::before { background: var(--rep); }
     .rep-card.party-ind::before { background: var(--ind); }
     .rep-card:hover { box-shadow: 3px 3px 0 rgba(15,25,35,0.1); transform: translate(-1px, -1px); }
+    .rep-card.static { cursor: default; }
+    .rep-card.static:hover { box-shadow: none; transform: none; }
     .rep-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--paper); display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.1rem; flex-shrink: 0; overflow: hidden; border: 2px solid var(--border); }
     .rep-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .rep-name { font-family: 'DM Serif Display', serif; font-size: 1.05rem; line-height: 1.2; margin-bottom: 3px; }
@@ -227,6 +238,15 @@
         <span class="level-label">Your Representatives</span>
         <span class="level-line"></span>
       </div>
+      <div class="rep-tabs" id="repTabs">
+        <button class="rep-tab active" type="button" data-tab="National">National</button>
+        <button class="rep-tab" type="button" data-tab="State">State</button>
+        <button class="rep-tab" type="button" data-tab="Local">Local</button>
+      </div>
+      <div class="rep-tabs rep-branch-tabs" id="repBranchTabs">
+        <button class="rep-tab active" type="button" data-branch="Executive">Executive</button>
+        <button class="rep-tab" type="button" data-branch="Legislative">Legislative</button>
+      </div>
       <div class="empty-card" id="repsStatus" style="display:none;"></div>
       <div id="repsContainer"></div>
     </section>
@@ -295,12 +315,94 @@
     const appEl = document.getElementById('app');
 
     const LEVEL_MAP = { country:'National', administrativeArea1:'State', administrativeArea2:'Local', locality:'Local', subLocality1:'Local', subLocality2:'Local', special:'Local' };
-    const LEVEL_ORDER = ['National','State','Local'];
+
+    // Curated static data for officials that /api/representatives has no
+    // source for (President/VP/Cabinet don't vary by address; state execs
+    // aren't covered by OpenStates). Sourced from Wikipedia's maintained
+    // officeholder lists as of September 2026 — these drift out of date after
+    // elections, resignations, and reshuffles, so re-verify periodically.
+    const NATIONAL_STATIC = {
+      president: { name: 'Donald J. Trump', office: 'President of the United States', party: 'Republican' },
+      vicePresident: { name: 'JD Vance', office: 'Vice President of the United States', party: 'Republican' },
+      cabinet: [
+        { name: 'Marco Rubio', office: 'Secretary of State', party: 'Republican' },
+        { name: 'Scott Bessent', office: 'Secretary of the Treasury', party: 'Republican' },
+        { name: 'Pete Hegseth', office: 'Secretary of Defense', party: 'Republican' },
+        { name: 'Todd Blanche', office: 'Attorney General', party: 'Republican' },
+        { name: 'Doug Burgum', office: 'Secretary of the Interior', party: 'Republican' },
+        { name: 'Brooke Rollins', office: 'Secretary of Agriculture', party: 'Republican' },
+        { name: 'Howard Lutnick', office: 'Secretary of Commerce', party: 'Republican' },
+        { name: 'Keith Sonderling', office: 'Secretary of Labor (Acting)', party: 'Republican' },
+        { name: 'Robert F. Kennedy Jr.', office: 'Secretary of Health and Human Services', party: 'Republican' },
+        { name: 'Scott Turner', office: 'Secretary of Housing and Urban Development', party: 'Republican' },
+        { name: 'Sean Duffy', office: 'Secretary of Transportation', party: 'Republican' },
+        { name: 'Chris Wright', office: 'Secretary of Energy', party: 'Republican' },
+        { name: 'Linda McMahon', office: 'Secretary of Education', party: 'Republican' },
+        { name: 'Doug Collins', office: 'Secretary of Veterans Affairs', party: 'Republican' },
+        { name: 'Markwayne Mullin', office: 'Secretary of Homeland Security', party: 'Republican' },
+      ],
+    };
+
+    const STATE_EXECS = {
+      AL: { governor:{name:'Kay Ivey',party:'Republican'}, ltGovernor:{name:'Will Ainsworth',party:'Republican'}, attorneyGeneral:{name:'Steve Marshall',party:'Republican'} },
+      AK: { governor:{name:'Mike Dunleavy',party:'Republican'}, ltGovernor:{name:'Nancy Dahlstrom',party:'Republican'}, attorneyGeneral:{name:'Cori Mills',party:'Republican'} },
+      AZ: { governor:{name:'Katie Hobbs',party:'Democratic'}, attorneyGeneral:{name:'Kris Mayes',party:'Democratic'} },
+      AR: { governor:{name:'Sarah Huckabee Sanders',party:'Republican'}, ltGovernor:{name:'Leslie Rutledge',party:'Republican'}, attorneyGeneral:{name:'Tim Griffin',party:'Republican'} },
+      CA: { governor:{name:'Gavin Newsom',party:'Democratic'}, ltGovernor:{name:'Eleni Kounalakis',party:'Democratic'}, attorneyGeneral:{name:'Rob Bonta',party:'Democratic'} },
+      CO: { governor:{name:'Jared Polis',party:'Democratic'}, ltGovernor:{name:'Dianne Primavera',party:'Democratic'}, attorneyGeneral:{name:'Phil Weiser',party:'Democratic'} },
+      CT: { governor:{name:'Ned Lamont',party:'Democratic'}, ltGovernor:{name:'Susan Bysiewicz',party:'Democratic'}, attorneyGeneral:{name:'William Tong',party:'Democratic'} },
+      DE: { governor:{name:'Matt Meyer',party:'Democratic'}, ltGovernor:{name:'Kyle Evans Gay',party:'Democratic'}, attorneyGeneral:{name:'Kathy Jennings',party:'Democratic'} },
+      FL: { governor:{name:'Ron DeSantis',party:'Republican'}, ltGovernor:{name:'Jay Collins',party:'Republican'}, attorneyGeneral:{name:'James Uthmeier',party:'Republican'} },
+      GA: { governor:{name:'Brian Kemp',party:'Republican'}, ltGovernor:{name:'Burt Jones',party:'Republican'}, attorneyGeneral:{name:'Chris Carr',party:'Republican'} },
+      HI: { governor:{name:'Josh Green',party:'Democratic'}, ltGovernor:{name:'Sylvia Luke',party:'Democratic'}, attorneyGeneral:{name:'Anne Lopez',party:'Democratic'} },
+      ID: { governor:{name:'Brad Little',party:'Republican'}, ltGovernor:{name:'Scott Bedke',party:'Republican'}, attorneyGeneral:{name:'Raúl Labrador',party:'Republican'} },
+      IL: { governor:{name:'JB Pritzker',party:'Democratic'}, ltGovernor:{name:'Juliana Stratton',party:'Democratic'}, attorneyGeneral:{name:'Kwame Raoul',party:'Democratic'} },
+      IN: { governor:{name:'Mike Braun',party:'Republican'}, ltGovernor:{name:'Micah Beckwith',party:'Republican'}, attorneyGeneral:{name:'Todd Rokita',party:'Republican'} },
+      IA: { governor:{name:'Kim Reynolds',party:'Republican'}, ltGovernor:{name:'Chris Cournoyer',party:'Republican'}, attorneyGeneral:{name:'Brenna Bird',party:'Republican'} },
+      KS: { governor:{name:'Laura Kelly',party:'Democratic'}, ltGovernor:{name:'David Toland',party:'Democratic'}, attorneyGeneral:{name:'Kris Kobach',party:'Republican'} },
+      KY: { governor:{name:'Andy Beshear',party:'Democratic'}, ltGovernor:{name:'Jacqueline Coleman',party:'Democratic'}, attorneyGeneral:{name:'Russell Coleman',party:'Republican'} },
+      LA: { governor:{name:'Jeff Landry',party:'Republican'}, ltGovernor:{name:'Billy Nungesser',party:'Republican'}, attorneyGeneral:{name:'Liz Murrill',party:'Republican'} },
+      ME: { governor:{name:'Janet Mills',party:'Democratic'}, attorneyGeneral:{name:'Aaron Frey',party:'Democratic'} },
+      MD: { governor:{name:'Wes Moore',party:'Democratic'}, ltGovernor:{name:'Aruna Miller',party:'Democratic'}, attorneyGeneral:{name:'Anthony Brown',party:'Democratic'} },
+      MA: { governor:{name:'Maura Healey',party:'Democratic'}, ltGovernor:{name:'Kim Driscoll',party:'Democratic'}, attorneyGeneral:{name:'Andrea Campbell',party:'Democratic'} },
+      MI: { governor:{name:'Gretchen Whitmer',party:'Democratic'}, ltGovernor:{name:'Garlin Gilchrist',party:'Democratic'}, attorneyGeneral:{name:'Dana Nessel',party:'Democratic'} },
+      MN: { governor:{name:'Tim Walz',party:'Democratic–Farmer–Labor'}, ltGovernor:{name:'Peggy Flanagan',party:'Democratic–Farmer–Labor'}, attorneyGeneral:{name:'Keith Ellison',party:'Democratic–Farmer–Labor'} },
+      MS: { governor:{name:'Tate Reeves',party:'Republican'}, ltGovernor:{name:'Delbert Hosemann',party:'Republican'}, attorneyGeneral:{name:'Lynn Fitch',party:'Republican'} },
+      MO: { governor:{name:'Mike Kehoe',party:'Republican'}, ltGovernor:{name:'David Wasinger',party:'Republican'}, attorneyGeneral:{name:'Catherine Hanaway',party:'Republican'} },
+      MT: { governor:{name:'Greg Gianforte',party:'Republican'}, ltGovernor:{name:'Kristen Juras',party:'Republican'}, attorneyGeneral:{name:'Austin Knudsen',party:'Republican'} },
+      NE: { governor:{name:'Jim Pillen',party:'Republican'}, ltGovernor:{name:'Joe Kelly',party:'Republican'}, attorneyGeneral:{name:'Mike Hilgers',party:'Republican'} },
+      NV: { governor:{name:'Joe Lombardo',party:'Republican'}, ltGovernor:{name:'Stavros Anthony',party:'Republican'}, attorneyGeneral:{name:'Aaron Ford',party:'Democratic'} },
+      NH: { governor:{name:'Kelly Ayotte',party:'Republican'}, attorneyGeneral:{name:'John Formella',party:'Republican'} },
+      NJ: { governor:{name:'Mikie Sherrill',party:'Democratic'}, ltGovernor:{name:'Dale Caldwell',party:'Democratic'}, attorneyGeneral:{name:'Jennifer Davenport',party:'Democratic'} },
+      NM: { governor:{name:'Michelle Lujan Grisham',party:'Democratic'}, ltGovernor:{name:'Howie Morales',party:'Democratic'}, attorneyGeneral:{name:'Raúl Torrez',party:'Democratic'} },
+      NY: { governor:{name:'Kathy Hochul',party:'Democratic'}, ltGovernor:{name:'Antonio Delgado',party:'Democratic'}, attorneyGeneral:{name:'Letitia James',party:'Democratic'} },
+      NC: { governor:{name:'Josh Stein',party:'Democratic'}, ltGovernor:{name:'Rachel Hunt',party:'Democratic'}, attorneyGeneral:{name:'Jeff Jackson',party:'Democratic'} },
+      ND: { governor:{name:'Kelly Armstrong',party:'Republican'}, ltGovernor:{name:'Michelle Strinden',party:'Republican'}, attorneyGeneral:{name:'Drew Wrigley',party:'Republican'} },
+      OH: { governor:{name:'Mike DeWine',party:'Republican'}, ltGovernor:{name:'Jim Tressel',party:'Republican'}, attorneyGeneral:{name:'Andy Wilson',party:'Republican'} },
+      OK: { governor:{name:'Kevin Stitt',party:'Republican'}, ltGovernor:{name:'Matt Pinnell',party:'Republican'}, attorneyGeneral:{name:'Gentner Drummond',party:'Republican'} },
+      OR: { governor:{name:'Tina Kotek',party:'Democratic'}, attorneyGeneral:{name:'Dan Rayfield',party:'Democratic'} },
+      PA: { governor:{name:'Josh Shapiro',party:'Democratic'}, ltGovernor:{name:'Austin Davis',party:'Democratic'}, attorneyGeneral:{name:'Dave Sunday',party:'Republican'} },
+      RI: { governor:{name:'Dan McKee',party:'Democratic'}, ltGovernor:{name:'Sabina Matos',party:'Democratic'}, attorneyGeneral:{name:'Peter Neronha',party:'Democratic'} },
+      SC: { governor:{name:'Henry McMaster',party:'Republican'}, ltGovernor:{name:'Pamela Evette',party:'Republican'}, attorneyGeneral:{name:'Alan Wilson',party:'Republican'} },
+      SD: { governor:{name:'Larry Rhoden',party:'Republican'}, ltGovernor:{name:'Tony Venhuizen',party:'Republican'}, attorneyGeneral:{name:'Marty Jackley',party:'Republican'} },
+      TN: { governor:{name:'Bill Lee',party:'Republican'}, attorneyGeneral:{name:'Jonathan Skrmetti',party:'Republican'} },
+      TX: { governor:{name:'Greg Abbott',party:'Republican'}, ltGovernor:{name:'Dan Patrick',party:'Republican'}, attorneyGeneral:{name:'Ken Paxton',party:'Republican'} },
+      UT: { governor:{name:'Spencer Cox',party:'Republican'}, ltGovernor:{name:'Deidre Henderson',party:'Republican'}, attorneyGeneral:{name:'Derek Brown',party:'Republican'} },
+      VT: { governor:{name:'Phil Scott',party:'Republican'}, ltGovernor:{name:'John S. Rodgers',party:'Republican'}, attorneyGeneral:{name:'Charity Clark',party:'Democratic'} },
+      VA: { governor:{name:'Abigail Spanberger',party:'Democratic'}, ltGovernor:{name:'Ghazala Hashmi',party:'Democratic'}, attorneyGeneral:{name:'Jay Jones',party:'Democratic'} },
+      WA: { governor:{name:'Bob Ferguson',party:'Democratic'}, ltGovernor:{name:'Denny Heck',party:'Democratic'}, attorneyGeneral:{name:'Nick Brown',party:'Democratic'} },
+      WV: { governor:{name:'Patrick Morrisey',party:'Republican'}, attorneyGeneral:{name:'JB McCuskey',party:'Republican'} },
+      WI: { governor:{name:'Tony Evers',party:'Democratic'}, ltGovernor:{name:'Sara Rodriguez',party:'Democratic'}, attorneyGeneral:{name:'Josh Kaul',party:'Democratic'} },
+      WY: { governor:{name:'Mark Gordon',party:'Republican'}, attorneyGeneral:{name:'Keith Kautz',party:'Republican'} },
+    };
 
     let currentUser = null;
     let addresses = [];
     let allRepsData = [];
     let repsBioguideMap = {};
+    let repsBuckets = null;
+    let activeRepsTab = 'National';
+    let activeBranchTab = 'Executive';
 
     function getPartyClass(party='') {
       if (/democrat/i.test(party)) return 'party-dem';
@@ -426,6 +528,7 @@
       if (primary) {
         loadRepsForAddress(primary.address);
       } else {
+        repsBuckets = null;
         document.getElementById('repsContainer').innerHTML = '';
         showRepsStatus('🏛️', 'No address on file', 'Add an address above to automatically see your representatives.');
       }
@@ -583,14 +686,43 @@
       repsStatus.style.display = 'none';
     }
 
+    function normalizeDynamic(official, office) {
+      return {
+        name: official.name,
+        officeName: office.name,
+        party: official.party,
+        phone: official.phones?.[0] || '',
+        url: official.urls?.[0] || '',
+        photoUrl: official.photoUrl || '',
+        clickable: true,
+        official,
+        office,
+      };
+    }
+
+    function normalizeStatic(name, officeName, party) {
+      return { name, officeName, party, phone: '', url: '', photoUrl: '', clickable: false };
+    }
+
     function renderRepsData(data) {
-      const grouped = {};
+      // Every dynamic official /api/representatives can currently return at
+      // the National or State level is a legislator (Senators/House at
+      // National, state Senate/House via OpenStates at State) — there's no
+      // dynamic source for executive-branch officials, so those buckets are
+      // filled entirely from the curated static lists below.
+      const grouped = {
+        National: { Executive: [], Legislative: [] },
+        State: { Executive: [], Legislative: [] },
+        Local: [],
+      };
       (data.offices || []).forEach(office => {
         const level = LEVEL_MAP[office.levels?.[0]] || 'Local';
-        if (!grouped[level]) grouped[level] = [];
         (office.officialIndices || []).forEach(idx => {
           const official = data.officials?.[idx];
-          if (official) grouped[level].push({ official, office: { name: office.name } });
+          if (!official) return;
+          const entry = normalizeDynamic(official, { name: office.name });
+          if (level === 'Local') grouped.Local.push(entry);
+          else grouped[level].Legislative.push(entry);
         });
       });
 
@@ -601,56 +733,107 @@
       const bioguideIds = Object.keys(repsBioguideMap);
       if (bioguideIds.length) loadRepsActivityFeed(bioguideIds);
 
-      if (Object.keys(grouped).length === 0) {
-        repsContainer.innerHTML = '';
-        showRepsStatus('🏛️', 'No representatives found', 'We couldn\'t find representatives for that address. Double-check it under My Addresses.');
+      grouped.National.Executive = [
+        normalizeStatic(NATIONAL_STATIC.president.name, NATIONAL_STATIC.president.office, NATIONAL_STATIC.president.party),
+        normalizeStatic(NATIONAL_STATIC.vicePresident.name, NATIONAL_STATIC.vicePresident.office, NATIONAL_STATIC.vicePresident.party),
+        ...NATIONAL_STATIC.cabinet.map(c => normalizeStatic(c.name, c.office, c.party)),
+      ];
+
+      const stateAbbr = data.normalizedInput?.state || '';
+      const execs = STATE_EXECS[stateAbbr];
+      if (execs) {
+        if (execs.governor) grouped.State.Executive.push(normalizeStatic(execs.governor.name, `Governor of ${stateAbbr}`, execs.governor.party));
+        if (execs.ltGovernor) grouped.State.Executive.push(normalizeStatic(execs.ltGovernor.name, `Lieutenant Governor of ${stateAbbr}`, execs.ltGovernor.party));
+        if (execs.attorneyGeneral) grouped.State.Executive.push(normalizeStatic(execs.attorneyGeneral.name, `Attorney General of ${stateAbbr}`, execs.attorneyGeneral.party));
+      }
+
+      repsBuckets = grouped;
+      hideRepsStatus();
+      renderActiveRepsTab();
+    }
+
+    function repsEmptyMessage() {
+      if (activeRepsTab === 'Local') {
+        return 'Local officials — mayor, city council, county judge/executive, sheriff — aren\'t available yet. Check back soon.';
+      }
+      const scope = activeRepsTab === 'National' ? 'national' : 'state';
+      return activeBranchTab === 'Executive'
+        ? `No ${scope} executive officials to show yet.`
+        : `We couldn't find ${scope} legislators for this address yet.`;
+    }
+
+    function buildRepCardHTML(entry, idx) {
+      const partyClass = getPartyClass(entry.party);
+      const staticClass = entry.clickable ? '' : ' static';
+      const idxAttr = entry.clickable ? ` data-rep-idx="${idx}"` : '';
+      return `
+        <div class="rep-card ${partyClass}${staticClass}"${idxAttr}>
+          <div class="rep-avatar">
+            ${entry.photoUrl
+              ? `<img src="${entry.photoUrl}" alt="${entry.name}" onerror="this.style.display='none'">`
+              : getInitials(entry.name)}
+          </div>
+          <div>
+            <div class="rep-name">${entry.name}</div>
+            <div class="rep-office">${entry.officeName}</div>
+            <span class="rep-party-badge">${entry.party || 'Unknown Party'}</span>
+            <div class="rep-links">
+              ${entry.phone ? `<a href="tel:${entry.phone}" class="rep-link">📞 ${entry.phone}</a>` : ''}
+              ${entry.url ? `<a href="${entry.url}" target="_blank" rel="noopener noreferrer" class="rep-link">🔗 Official Site</a>` : ''}
+            </div>
+          </div>
+          <div class="rep-side">
+            ${entry.clickable ? '<span class="soon-tag">View Profile</span>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderActiveRepsTab() {
+      document.querySelectorAll('#repTabs .rep-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === activeRepsTab));
+
+      const hasBranches = activeRepsTab === 'National' || activeRepsTab === 'State';
+      const branchTabsEl = document.getElementById('repBranchTabs');
+      branchTabsEl.hidden = !hasBranches;
+      if (hasBranches) {
+        document.querySelectorAll('#repBranchTabs .rep-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.branch === activeBranchTab));
+      }
+
+      if (!repsBuckets) return;
+
+      const list = activeRepsTab === 'Local'
+        ? (repsBuckets.Local || [])
+        : (repsBuckets[activeRepsTab]?.[activeBranchTab] || []);
+
+      if (list.length === 0) {
+        repsContainer.innerHTML = `<p class="no-address-note">${repsEmptyMessage()}</p>`;
         return;
       }
 
-      hideRepsStatus();
       allRepsData = [];
-      repsContainer.innerHTML = LEVEL_ORDER.map(level => {
-        const officials = grouped[level];
-        if (!officials?.length) return '';
-        return `
-          <div class="level-group">
-            <div class="level-header">
-              <span class="level-label">${level}</span>
-              <span class="level-line"></span>
-              <span class="level-count">${officials.length} rep${officials.length !== 1 ? 's' : ''}</span>
-            </div>
-            ${officials.map(({ official, office }) => {
-              const repIdx = allRepsData.length;
-              allRepsData.push({ official, office });
-              const partyClass = getPartyClass(official.party);
-              const phone = official.phones?.[0] || '';
-              const url = official.urls?.[0] || '';
-              return `
-                <div class="rep-card ${partyClass}" data-rep-idx="${repIdx}">
-                  <div class="rep-avatar">
-                    ${official.photoUrl
-                      ? `<img src="${official.photoUrl}" alt="${official.name}" onerror="this.style.display='none'">`
-                      : getInitials(official.name)}
-                  </div>
-                  <div>
-                    <div class="rep-name">${official.name}</div>
-                    <div class="rep-office">${office.name}</div>
-                    <span class="rep-party-badge">${official.party || 'Unknown Party'}</span>
-                    <div class="rep-links">
-                      ${phone ? `<a href="tel:${phone}" class="rep-link">📞 ${phone}</a>` : ''}
-                      ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="rep-link">🔗 Official Site</a>` : ''}
-                    </div>
-                  </div>
-                  <div class="rep-side">
-                    <span class="soon-tag">View Profile</span>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
+      repsContainer.innerHTML = list.map(entry => {
+        if (entry.clickable) {
+          const idx = allRepsData.length;
+          allRepsData.push({ official: entry.official, office: entry.office });
+          return buildRepCardHTML(entry, idx);
+        }
+        return buildRepCardHTML(entry, -1);
       }).join('');
     }
+
+    document.getElementById('repTabs').addEventListener('click', e => {
+      const btn = e.target.closest('.rep-tab');
+      if (!btn || btn.dataset.tab === activeRepsTab) return;
+      activeRepsTab = btn.dataset.tab;
+      renderActiveRepsTab();
+    });
+
+    document.getElementById('repBranchTabs').addEventListener('click', e => {
+      const btn = e.target.closest('.rep-tab');
+      if (!btn || btn.dataset.branch === activeBranchTab) return;
+      activeBranchTab = btn.dataset.branch;
+      renderActiveRepsTab();
+    });
 
     // ── What's Happening in Congress ─────────────────────────────────────
     function billTypeLabelFeed(type = '') {
@@ -734,6 +917,7 @@
     }
 
     async function loadRepsForAddress(address) {
+      repsBuckets = null;
       repsContainer.innerHTML = '';
       showRepsLoading(`Pulling from public government records for ${address}.`);
       try {
